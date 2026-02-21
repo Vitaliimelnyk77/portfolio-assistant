@@ -1,6 +1,6 @@
 import streamlit as st
 import anthropic
-import os
+import pandas as pd
 
 ANTHROPIC_API_KEY = st.secrets["ANTHROPIC_API_KEY"]
 
@@ -19,13 +19,18 @@ st.set_page_config(page_title="Инвестиционный помощник", p
 with st.sidebar:
     st.title("💼 Портфельный ассистент")
     st.markdown("---")
-    
-    uploaded_file = st.file_uploader("📂 Загрузить CSV из XTB", type="csv")
+
+    uploaded_file = st.file_uploader("📂 Загрузить файл из XTB", type=["csv", "xlsx", "xls"])
     if uploaded_file:
-        import pandas as pd
-        df = pd.read_csv(uploaded_file)
-        st.success(f"Загружено {len(df)} записей")
-        st.session_state.xtb_data = df.to_string()
+        try:
+            if uploaded_file.name.endswith(".csv"):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_excel(uploaded_file)
+            st.success(f"Загружено {len(df)} записей")
+            st.session_state.xtb_data = df.to_string()
+        except Exception as e:
+            st.error(f"Ошибка загрузки: {e}")
 
     st.markdown("---")
     st.markdown("**Быстрые команды:**")
@@ -57,26 +62,5 @@ for message in st.session_state.messages:
 if "quick_command" in st.session_state:
     prompt = st.session_state.pop("quick_command")
 else:
-    prompt = st.chat_input("Введите сообщение или команду...")
-
-if prompt:
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    st.session_state.messages.append({"role": "user", "content": prompt})
-
-    with st.chat_message("assistant"):
-        with st.spinner("Анализирую..."):
-            system = get_system_prompt()
-            if "xtb_data" in st.session_state:
-                system += f"\n\nДАННЫЕ ПОРТФЕЛЯ ИЗ XTB:\n{st.session_state.xtb_data}"
-            response = client.messages.create(
-                model="claude-opus-4-6",
-                max_tokens=4096,
-                system=system,
-                messages=st.session_state.messages
-            )
-            reply = response.content[0].text
-            st.markdown(reply)
-
-    st.session_state.messages.append({"role": "assistant", "content": reply})
-    
+    prompt = st.chat_input("Введите сообщение и
+                           
