@@ -19,8 +19,12 @@ PORTFOLIO = {
     "BTC": {"ticker": "BTC-USD", "volume": 0.0, "open_price": 0},
 }
 
-WATCHLIST = ["PLTR", "SOFI", "F", "BAC", "NVDA", "MSFT", "VGWL.DE", "BTC-USD", "LINK-USD"]
-
+WATCHLIST = [
+    "PLTR", "SOFI", "F", "BAC", "NVDA", "AMD", "MSFT", "GOOGL", "META",
+    "JNJ", "KO", "PG", "VZ", "T", "JPM", "GS", "V", "MA",
+    "VGWL.DE", "VHYL.DE", "CSPX.L",
+    "BTC-USD", "ETH-USD", "SOL-USD", "LINK-USD"
+]
 def send(msg):
     requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage",
                   json={"chat_id": CHAT_ID, "text": msg, "parse_mode": "HTML"})
