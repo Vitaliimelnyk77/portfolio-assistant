@@ -1,12 +1,12 @@
 import streamlit as st
-import anthropic
 import base64
 import json
 import os
 from datetime import datetime
+from groq import Groq
 from xtb_parser import parse_xtb_file
 
-ANTHROPIC_API_KEY = st.secrets["ANTHROPIC_API_KEY"]
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 HISTORY_FILE = "chat_history.json"
 
 def load_history():
@@ -30,7 +30,7 @@ def get_system_prompt():
 if "messages" not in st.session_state:
     st.session_state.messages = load_history()
 
-client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+client = Groq(api_key=GROQ_API_KEY)
 st.set_page_config(page_title="Инвестиционный помощник", page_icon="💼", layout="wide")
 
 with st.sidebar:
@@ -45,13 +45,15 @@ with st.sidebar:
         else:
             st.error(parsed_text)
     st.markdown("---")
-    screenshot = st.file_uploader("Загрузить скриншот", type=["png","jpg","jpeg"], key="screenshot_file")
-    if screenshot:
-        st.image(screenshot, use_column_width=True)
-        screenshot.seek(0)
-        st.session_state.screenshot = base64.b64encode(screenshot.read()).decode()
-        st.session_state.screenshot_type = screenshot.type
-        st.success("Скриншот готов!")
+    screenshots = st.file_uploader("Загрузить скриншоты (до 5)", type=["png","jpg","jpeg"], key="screenshot_file", accept_multiple_files=True)
+    if screenshots:
+        images = []
+        for s in screenshots[:5]:
+            st.image(s, use_column_width=True)
+            s.seek(0)
+            images.append({"data": base64.b64encode(s.read()).decode(), "type": s.type})
+        st.session_state.screenshots = images
+        st.success(f"Загружено {len(images)} скриншотов!")
     st.markdown("---")
     st.markdown("Команды:")
     commands = {
@@ -67,6 +69,7 @@ with st.sidebar:
         "Сигналы": "/сигналы",
         "Новости": "/новости",
         "Журнал": "/журнал",
+        "Обновить портфель": "/обновить",
     }
     for label, command in commands.items():
         if st.button(label, use_container_width=True):
@@ -77,7 +80,7 @@ with st.sidebar:
         save_history([])
         st.rerun()
 
-st.title("Инвестиционный помощник")
+st.title("Инвестиционный помощник 💼")
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -96,28 +99,23 @@ else:
 if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
-    user_content = prompt
-    if "screenshot" in st.session_state:
-        user_content = [
-            {"type": "image", "source": {"type": "base64", "media_type": st.session_state.screenshot_type, "data": st.session_state.screenshot}},
-            {"type": "text", "text": prompt}
-        ]
-        del st.session_state.screenshot
-        del st.session_state.screenshot_type
-    st.session_state.messages.append({"role": "user", "content": user_content})
+    st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("assistant"):
         with st.spinner("Анализирую..."):
             today = datetime.now().strftime("%A, %d %B %Y, %H:%M")
             system = get_system_prompt() + f"\n\nСегодня: {today}"
             if "xtb_data" in st.session_state:
                 system += f"\n\nДАННЫЕ ПОРТФЕЛЯ XTB:\n{st.session_state.xtb_data}"
-            response = client.messages.create(
-                model="claude-opus-4-6",
-                max_tokens=4096,
-                system=system,
-                messages=st.session_state.messages
+            messages = [{"role": "system", "content": system}]
+            for m in st.session_state.messages[-100:]:
+                if isinstance(m["content"], str):
+                    messages.append({"role": m["role"], "content": m["content"]})
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=messages,
+                max_tokens=4096
             )
-            reply = response.content[0].text
+            reply = response.choices[0].message.content
             st.markdown(reply)
     st.session_state.messages.append({"role": "assistant", "content": reply})
     save_history(st.session_state.messages)
