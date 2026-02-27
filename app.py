@@ -40,64 +40,66 @@ def load_portfolio():
     except:
         return None
 
+def card(name, price, open_price, volume):
+    pct = (price - open_price) / open_price * 100
+    pl = (price - open_price) * volume
+    color = "#00c853" if pct >= 0 else "#ff1744"
+    arrow = "▲" if pct >= 0 else "▼"
+    return f"""
+    <div style='background:#1e1e2e;padding:14px;border-radius:10px;border-left:4px solid {color};margin-bottom:8px;'>
+        <div style='color:#aaa;font-size:12px;margin-bottom:4px;'>{name}</div>
+        <div style='color:white;font-size:18px;font-weight:bold;'>{price:.2f}</div>
+        <div style='color:{color};font-size:13px;'>{arrow} {pct:+.2f}% &nbsp; P&L: {pl:+.2f}</div>
+    </div>
+    """
+
 if "messages" not in st.session_state:
     st.session_state.messages = load_history()
 
 client = Groq(api_key=GROQ_API_KEY)
 st.set_page_config(page_title="Инвестиционный помощник", page_icon="💼", layout="wide")
 
-# Дашборд сверху
 portfolio = load_portfolio()
-if portfolio:
-    prices = {}
-    for p in portfolio["positions"]:
-        if p["volume"] > 0:
-            price = get_price(p["ticker"])
-            if price:
-                prices[p["name"]] = price
 
-    ike_balance = portfolio["accounts"].get("IKE", {}).get("balance", 0)
-    trade_balance = portfolio["accounts"].get("Transakcje", {}).get("balance", 0)
-    total = ike_balance + trade_balance
+if portfolio:
+    ike_bal = portfolio["accounts"].get("IKE", {}).get("balance", 0)
+    tr_bal = portfolio["accounts"].get("Transakcje", {}).get("balance", 0)
+    total = ike_bal + tr_bal
 
     st.markdown(f"""
-    <div style='background:#1a1a2e;padding:20px;border-radius:12px;margin-bottom:20px;'>
-        <div style='display:flex;justify-content:space-between;align-items:center;'>
-            <div>
-                <div style='color:#888;font-size:14px;'>Общий баланс</div>
-                <div style='color:white;font-size:36px;font-weight:bold;'>{total:,.2f} PLN</div>
-            </div>
-            <div style='text-align:right;'>
-                <div style='color:#888;font-size:12px;'>IKE: {ike_balance:,.2f} PLN</div>
-                <div style='color:#888;font-size:12px;'>Transakcje: {trade_balance:,.2f} PLN</div>
-            </div>
+    <div style='background:linear-gradient(135deg,#1a1a2e,#16213e);padding:20px;border-radius:14px;margin-bottom:16px;'>
+        <div style='color:#888;font-size:13px;'>Общий баланс портфеля</div>
+        <div style='color:white;font-size:38px;font-weight:bold;margin:4px 0;'>{total:,.2f} PLN</div>
+        <div style='display:flex;gap:24px;margin-top:8px;'>
+            <div><span style='color:#888;font-size:12px;'>IKE</span><br><span style='color:white;font-size:16px;'>{ike_bal:,.2f} PLN</span></div>
+            <div><span style='color:#888;font-size:12px;'>Transakcje</span><br><span style='color:white;font-size:16px;'>{tr_bal:,.2f} PLN</span></div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    cols = st.columns(len([p for p in portfolio["positions"] if p["volume"] > 0]))
-    col_idx = 0
-    for p in portfolio["positions"]:
-        if p["volume"] == 0:
-            continue
-        price = prices.get(p["name"])
-        if price:
-            pct = (price - p["open_price"]) / p["open_price"] * 100
-            color = "#00c853" if pct >= 0 else "#ff1744"
-            arrow = "▲" if pct >= 0 else "▼"
-            with cols[col_idx]:
-                st.markdown(f"""
-                <div style='background:#16213e;padding:15px;border-radius:10px;border-left:4px solid {color};'>
-                    <div style='color:#aaa;font-size:12px;'>{p["name"]}</div>
-                    <div style='color:white;font-size:20px;font-weight:bold;'>{price:.2f}</div>
-                    <div style='color:{color};font-size:14px;'>{arrow} {pct:+.2f}%</div>
-                </div>
-                """, unsafe_allow_html=True)
-        col_idx += 1
+    col_ike, col_tr = st.columns(2)
+
+    ike_positions = [p for p in portfolio["positions"] if p["account"] == "IKE" and p["volume"] > 0]
+    tr_positions = [p for p in portfolio["positions"] if p["account"] == "Transakcje" and p["volume"] > 0]
+
+    with col_ike:
+        st.markdown("#### 🏦 IKE")
+        for p in ike_positions:
+            price = get_price(p["ticker"])
+            if price:
+                st.markdown(card(p["name"], price, p["open_price"], p["volume"]), unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#888;font-size:12px;'>Свободные средства: {portfolio['accounts']['IKE']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
+
+    with col_tr:
+        st.markdown("#### 💼 Moje Transakcje")
+        for p in tr_positions:
+            price = get_price(p["ticker"])
+            if price:
+                st.markdown(card(p["name"], price, p["open_price"], p["volume"]), unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#888;font-size:12px;'>Свободные средства: {portfolio['accounts']['Transakcje']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
 
 st.markdown("---")
 
-# Основной интерфейс
 col1, col2 = st.columns([1, 3])
 
 with col1:
