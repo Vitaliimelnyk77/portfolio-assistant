@@ -46,9 +46,13 @@ def load_portfolio():
     except:
         return None
 
-def card(name, price, open_price, volume, eur_pln=4.24):
+def card(name, price, open_price, volume, eur_pln=4.24, cost_pln=None):
     pct = (price - open_price) / open_price * 100
-    pl = (price - open_price) * volume * eur_pln
+    if cost_pln:
+        current_pln = price * volume * eur_pln
+        pl = current_pln - cost_pln
+    else:
+        pl = (price - open_price) * volume * eur_pln
     color = "#00c853" if pct >= 0 else "#ff1744"
     arrow = "▲" if pct >= 0 else "▼"
     return f"""
@@ -95,7 +99,7 @@ if portfolio:
         for p in ike_positions:
             price = get_price(p["ticker"])
             if price:
-                st.markdown(card(p["name"], price, p["open_price"], p["volume"], eur_pln), unsafe_allow_html=True)
+                st.markdown(card(p["name"], price, p["open_price"], p["volume"], eur_pln, p.get("cost_pln")), unsafe_allow_html=True)
         st.markdown(f"<div style='color:#888;font-size:12px;margin-top:4px;'>Свободные средства: {portfolio['accounts']['IKE']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
 
     with col_tr:
@@ -103,7 +107,7 @@ if portfolio:
         for p in tr_positions:
             price = get_price(p["ticker"])
             if price:
-                st.markdown(card(p["name"], price, p["open_price"], p["volume"], eur_pln), unsafe_allow_html=True)
+                st.markdown(card(p["name"], price, p["open_price"], p["volume"], eur_pln, p.get("cost_pln")), unsafe_allow_html=True)
         st.markdown(f"<div style='color:#888;font-size:12px;margin-top:4px;'>Свободные средства: {portfolio['accounts']['Transakcje']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
 
 st.markdown("---")
