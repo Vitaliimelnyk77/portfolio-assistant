@@ -28,11 +28,16 @@ def get_system_prompt():
     with open("system_prompt.txt", "r", encoding="utf-8") as f:
         return f.read()
 
-def get_eur_pln():
+def get_rates():
     try:
-        return yf.Ticker("EURPLN=X").fast_info.last_price
+        eur_pln = yf.Ticker("EURPLN=X").fast_info.last_price
     except:
-        return 4.24
+        eur_pln = 4.22
+    try:
+        usd_pln = yf.Ticker("USDPLN=X").fast_info.last_price
+    except:
+        usd_pln = 3.57
+    return eur_pln, usd_pln
 
 def get_price(ticker):
     try:
@@ -46,10 +51,11 @@ def load_portfolio():
     except:
         return None
 
-def card(name, price, open_price, volume, eur_pln=4.24, cost_pln=None):
+def card(name, price, open_price, volume, eur_pln=4.22, cost_pln=None, currency="EUR", usd_pln=3.57):
     pct = (price - open_price) / open_price * 100
     if cost_pln:
-        current_pln = price * volume * eur_pln
+        rate = usd_pln if currency == "USD" else eur_pln
+        current_pln = price * volume * rate
         pl = current_pln - cost_pln
     else:
         pl = (price - open_price) * volume * eur_pln
@@ -75,7 +81,7 @@ if portfolio:
     ike_bal = portfolio["accounts"].get("IKE", {}).get("balance", 0)
     tr_bal = portfolio["accounts"].get("Transakcje", {}).get("balance", 0)
     total = ike_bal + tr_bal
-    eur_pln = get_eur_pln()
+    eur_pln, usd_pln = get_rates()
 
     st.markdown(f"""
     <div style='background:linear-gradient(135deg,#1976d2,#1565c0);padding:20px;border-radius:14px;margin-bottom:16px;'>
@@ -85,6 +91,7 @@ if portfolio:
             <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>IKE</span><br><span style='color:white;font-size:16px;'>{ike_bal:,.2f} PLN</span></div>
             <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>Transakcje</span><br><span style='color:white;font-size:16px;'>{tr_bal:,.2f} PLN</span></div>
             <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>EUR/PLN</span><br><span style='color:white;font-size:16px;'>{eur_pln:.4f}</span></div>
+            <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>USD/PLN</span><br><span style='color:white;font-size:16px;'>{usd_pln:.4f}</span></div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -99,7 +106,7 @@ if portfolio:
         for p in ike_positions:
             price = get_price(p["ticker"])
             if price:
-                st.markdown(card(p["name"], price, p["open_price"], p["volume"], eur_pln, p.get("cost_pln")), unsafe_allow_html=True)
+                st.markdown(card(p["name"], price, p["open_price"], p["volume"], eur_pln, p.get("cost_pln"), p.get("currency", "EUR"), usd_pln), unsafe_allow_html=True)
         st.markdown(f"<div style='color:#888;font-size:12px;margin-top:4px;'>Свободные средства: {portfolio['accounts']['IKE']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
 
     with col_tr:
@@ -107,7 +114,7 @@ if portfolio:
         for p in tr_positions:
             price = get_price(p["ticker"])
             if price:
-                st.markdown(card(p["name"], price, p["open_price"], p["volume"], eur_pln, p.get("cost_pln")), unsafe_allow_html=True)
+                st.markdown(card(p["name"], price, p["open_price"], p["volume"], eur_pln, p.get("cost_pln"), p.get("currency", "USD"), usd_pln), unsafe_allow_html=True)
         st.markdown(f"<div style='color:#888;font-size:12px;margin-top:4px;'>Свободные средства: {portfolio['accounts']['Transakcje']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
 
 st.markdown("---")
