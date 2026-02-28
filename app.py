@@ -88,7 +88,7 @@ if portfolio:
             price = get_price(p["ticker"])
             if price:
                 st.markdown(card(p["name"], price, p["open_price"], p["volume"]), unsafe_allow_html=True)
-        st.markdown(f"<div style='color:#888;font-size:12px;'>Свободные средства: {portfolio['accounts']['IKE']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#888;font-size:12px;margin-top:4px;'>Свободные средства: {portfolio['accounts']['IKE']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
 
     with col_tr:
         st.markdown("#### 💼 Moje Transakcje")
@@ -96,7 +96,7 @@ if portfolio:
             price = get_price(p["ticker"])
             if price:
                 st.markdown(card(p["name"], price, p["open_price"], p["volume"]), unsafe_allow_html=True)
-        st.markdown(f"<div style='color:#888;font-size:12px;'>Свободные средства: {portfolio['accounts']['Transakcje']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#888;font-size:12px;margin-top:4px;'>Свободные средства: {portfolio['accounts']['Transakcje']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
 
 st.markdown("---")
 
