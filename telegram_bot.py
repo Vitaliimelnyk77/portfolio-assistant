@@ -66,15 +66,34 @@ def get_indicators(ticker):
             "price": l['Close'],
             "rsi": l['RSI'],
             "change_pct": (l['Close'] - prev['Close']) / prev['Close'] * 100,
-            "above_ma50": l['Close'] > l['MA50'],
+            "above_ma50": bool(l['Close'] > l['MA50']),
         }
     except:
         return None
 
+def get_system():
+    system = open("system_prompt.txt").read()
+    now = datetime.now().strftime("%A, %d %B %Y, %H:%M")
+    system += f"\n\nСейчас: {now} (Варшава, CET)"
+    try:
+        eur_pln, usd_pln = get_rates()
+        system += f"\n\nТЕКУЩИЕ КУРСЫ: EUR/PLN={eur_pln:.4f}, USD/PLN={usd_pln:.4f}"
+    except:
+        pass
+    try:
+        sr = json.load(open("screener_results.json"))
+        if sr["signals"]:
+            system += f"\n\nПОСЛЕДНИЙ СКРИНИНГ ({sr['date']}):\n"
+            for s in sr["signals"][:5]:
+                system += f"- {s['ticker']}: RSI={s['rsi']:.0f}, {', '.join(s['reasons'])}\n"
+    except:
+        pass
+    return system
+
 def cmd_portfolio(chat_id):
     portfolio = load_portfolio()
     if not portfolio:
-        send("❌ Портфель не загружен", chat_id)
+        send("Портфель не загружен", chat_id)
         return
     eur_pln, usd_pln = get_rates()
     lines = [f"📊 <b>Портфель ({datetime.now().strftime('%d.%m.%Y %H:%M')})</b>\n"]
@@ -131,14 +150,38 @@ def cmd_signals(chat_id):
         lines.append(f"\n🚨 Лучшие для покупки: {', '.join(buy_signals)}")
     send("\n".join(lines), chat_id)
 
+def cmd_trade(chat_id, ticker):
+    d = get_indicators(ticker)
+    if not d:
+        send(f"❌ Не могу получить данные по {ticker}", chat_id)
+        return
+    eur_pln, usd_pln = get_rates()
+    budget_usd = 300 / usd_pln
+    prompt = f"""Дай точный торговый план для {ticker}.
+Цена: {d['price']:.2f}
+RSI: {d['rsi']:.0f}
+Выше MA50: {'да' if d['above_ma50'] else 'нет'}
+Изменение за день: {d['change_pct']:+.1f}%
+Бюджет: 300 PLN (~{budget_usd:.0f} USD)
+Стиль: Swing Trading 2-14 дней, макс риск 2% (6 PLN)
+
+Дай ТОЛЬКО в таком формате:
+Вход: $XX.XX
+Стоп-лосс: $XX.XX (-X%)
+Тейк-профит 1: $XX.XX (+X%)
+Тейк-профит 2: $XX.XX (+X%)
+Размер позиции: XX акций (~XXX PLN)
+Риск/Прибыль: 1:X
+Обоснование: 2 предложения"""
+    resp = groq_client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        max_tokens=300,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    send(f"📈 <b>Торговый план {ticker}</b>\n\n{resp.choices[0].message.content}", chat_id)
+
 def cmd_ask(chat_id, question):
-    system = open("system_prompt.txt").read()
-    try:
-        eur_pln = yf.Ticker("EURPLN=X").fast_info.last_price
-        usd_pln = yf.Ticker("USDPLN=X").fast_info.last_price
-        system += f"\n\nТЕКУЩИЕ КУРСЫ: EUR/PLN={eur_pln:.4f}, USD/PLN={usd_pln:.4f}"
-    except:
-        pass
+    system = get_system()
     resp = groq_client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         max_tokens=500,
@@ -157,14 +200,7 @@ def cmd_analyze(chat_id, ticker):
     resp = groq_client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         max_tokens=400,
-        messages=[{"role": "user", "content": f"""Кратко проанализируй актив {ticker}:
-Цена: {d['price']:.2f}
-Изменение: {d['change_pct']:+.1f}%
-RSI: {d['rsi']:.0f}
-Выше MA50: {'да' if d['above_ma50'] else 'нет'}
-
-Инвестор: умеренный, цель 25-30% годовых, бюджет 300 PLN.
-Дай вывод: покупать/продавать/наблюдать и почему (3-4 предложения)."""}]
+        messages=[{"role": "user", "content": f"Кратко проанализируй {ticker}: цена={d['price']:.2f}, RSI={d['rsi']:.0f}, выше MA50={'да' if d['above_ma50'] else 'нет'}, изменение={d['change_pct']:+.1f}%. Инвестор: цель 25-30% годовых, бюджет 300 PLN. Покупать/продавать/наблюдать? (3-4 предложения)"}]
     )
     send(f"📈 <b>Анализ {ticker}</b>\n\nЦена: {d['price']:.2f} ({d['change_pct']:+.1f}%)\nRSI: {d['rsi']:.0f}\n\n{resp.choices[0].message.content}", chat_id)
 
@@ -174,10 +210,12 @@ def cmd_help(chat_id):
 /портфель — текущее состояние
 /сигналы — торговые сигналы
 /анализ NVDA — анализ актива
+/торговля BAC — точки входа/выхода
 /вопрос Что думаешь о золоте? — вопрос ИИ
 /помощь — список команд
 
-📊 Автоотчёты приходят в 8:00, 12:00, 18:00""", chat_id)
+📊 Автоотчёты: 8:00, 12:00, 18:00
+🔍 Скрининг рынка: каждый день в 7:00""", chat_id)
 
 def process_message(msg):
     chat_id = msg["chat"]["id"]
@@ -194,6 +232,13 @@ def process_message(msg):
             cmd_analyze(chat_id, ticker)
         else:
             send("Укажите тикер: /анализ NVDA", chat_id)
+    elif text.startswith("/торговля"):
+        parts = text.split()
+        ticker = parts[1].upper() if len(parts) > 1 else None
+        if ticker:
+            cmd_trade(chat_id, ticker)
+        else:
+            send("Укажите тикер: /торговля BAC", chat_id)
     elif text.startswith("/вопрос"):
         question = text[8:].strip()
         if question:
@@ -203,10 +248,8 @@ def process_message(msg):
     elif text.startswith("/помощь") or text.startswith("/start"):
         cmd_help(chat_id)
     else:
-        # Любое сообщение — передаём ИИ
         cmd_ask(chat_id, text)
 
-# Основной цикл
 offset = get_offset()
 updates = get_updates(offset)
 for update in updates:
