@@ -27,19 +27,31 @@ def save_history(messages):
         json.dump(to_save, f, ensure_ascii=False, indent=2)
 
 def get_system_prompt():
-    with open("system_prompt.txt", "r", encoding="utf-8") as f:
-        return f.read()
+    system = open("system_prompt.txt", "r", encoding="utf-8").read()
+    now = datetime.now().strftime("%A, %d %B %Y, %H:%M")
+    system += f"\n\nСейчас: {now} (Варшава, CET)"
+    try:
+        eur_pln, usd_pln = get_rates()
+        system += f"\n\nТЕКУЩИЕ КУРСЫ: EUR/PLN={eur_pln:.4f}, USD/PLN={usd_pln:.4f}"
+    except:
+        pass
+    try:
+        sr = json.load(open("screener_results.json"))
+        if sr["signals"]:
+            system += f"\n\nПОСЛЕДНИЙ СКРИНИНГ ({sr['date']}):\n"
+            for s in sr["signals"][:5]:
+                system += f"- {s['ticker']}: RSI={s['rsi']:.0f}, {', '.join(s['reasons'])}\n"
+    except:
+        pass
+    return system
 
 def get_rates():
     try:
         eur_pln = yf.Ticker("EURPLN=X").fast_info.last_price
-    except:
-        eur_pln = 4.22
-    try:
         usd_pln = yf.Ticker("USDPLN=X").fast_info.last_price
+        return eur_pln, usd_pln
     except:
-        usd_pln = 3.57
-    return eur_pln, usd_pln
+        return 4.22, 3.57
 
 def get_price(ticker):
     try:
@@ -91,7 +103,6 @@ if portfolio:
     total = ike_bal + tr_bal
     eur_pln, usd_pln = get_rates()
 
-    # Верхний блок баланса
     st.markdown(f"""
     <div style='background:linear-gradient(135deg,#1976d2,#1565c0);padding:20px;border-radius:14px;margin-bottom:16px;'>
         <div style='color:rgba(255,255,255,0.7);font-size:13px;'>Общий баланс портфеля</div>
@@ -106,11 +117,10 @@ if portfolio:
     """, unsafe_allow_html=True)
 
     col_ike, col_tr = st.columns(2)
-
     ike_positions = [p for p in portfolio["positions"] if p["account"] == "IKE" and p["volume"] > 0]
     tr_positions = [p for p in portfolio["positions"] if p["account"] == "Transakcje" and p["volume"] > 0]
-
     prices = {}
+
     with col_ike:
         st.markdown("#### 🏦 IKE")
         for p in ike_positions:
@@ -131,7 +141,6 @@ if portfolio:
 
     st.markdown("---")
 
-    # Графики
     col_chart1, col_chart2 = st.columns([2, 1])
 
     with col_chart1:
@@ -149,35 +158,25 @@ if portfolio:
                 line=dict(color="#1976d2", width=2),
                 fill="tozeroy", fillcolor="rgba(25,118,210,0.1)"
             ))
-            fig.update_layout(
-                margin=dict(l=0, r=0, t=10, b=0),
-                height=250,
-                xaxis=dict(showgrid=False),
-                yaxis=dict(showgrid=True, gridcolor="#f0f0f0"),
-                plot_bgcolor="white",
-                paper_bgcolor="white"
-            )
+            fig.update_layout(margin=dict(l=0, r=0, t=10, b=0), height=250,
+                              xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor="#f0f0f0"),
+                              plot_bgcolor="white", paper_bgcolor="white")
             st.plotly_chart(fig, use_container_width=True)
 
     with col_chart2:
         st.markdown("#### 🥧 Структура IKE")
-        labels = []
-        values = []
+        labels, values = [], []
         for p in ike_positions:
             price = prices.get(p["name"])
             if price:
                 rate = usd_pln if p.get("currency") == "USD" else eur_pln
-                val = price * p["volume"] * rate
                 labels.append(p["name"])
-                values.append(val)
-        cash = portfolio["accounts"]["IKE"]["cash"]
+                values.append(price * p["volume"] * rate)
         labels.append("Свободные средства")
-        values.append(cash)
-        fig2 = px.pie(
-            values=values, names=labels,
-            color_discrete_sequence=["#1976d2", "#ff9800", "#4caf50", "#e0e0e0"]
-        )
-        fig2.update_layout(margin=dict(l=0, r=0, t=10, b=0), height=250, showlegend=True)
+        values.append(portfolio["accounts"]["IKE"]["cash"])
+        fig2 = px.pie(values=values, names=labels,
+                      color_discrete_sequence=["#1976d2", "#ff9800", "#4caf50", "#e0e0e0"])
+        fig2.update_layout(margin=dict(l=0, r=0, t=10, b=0), height=250)
         fig2.update_traces(textposition="inside", textinfo="percent")
         st.plotly_chart(fig2, use_container_width=True)
 
@@ -187,6 +186,15 @@ col1, col2 = st.columns([1, 3])
 
 with col1:
     st.markdown("### 💼 Помощник")
+
+    # Поле для торгового плана
+    trade_ticker = st.text_input("Тикер для торгового плана", placeholder="BAC, SOFI, NVDA...")
+    if st.button("📈 Торговый план", use_container_width=True):
+        if trade_ticker:
+            st.session_state.quick_command = f"Дай точный торговый план для {trade_ticker.upper()}: точки входа, стоп-лосс, тейк-профит 1 и 2, размер позиции из бюджета 300 PLN, соотношение риск/прибыль."
+
+    st.markdown("---")
+
     uploaded_file = st.file_uploader("Файл XTB", type=["csv","xlsx","xls","zip"], key="xtb_file")
     if uploaded_file:
         parsed_text, count = parse_xtb_file(uploaded_file)
@@ -195,6 +203,7 @@ with col1:
             st.session_state.xtb_data = parsed_text
         else:
             st.error(parsed_text)
+
     screenshots = st.file_uploader("Скриншоты (до 5)", type=["png","jpg","jpeg"], key="screenshot_file", accept_multiple_files=True)
     if screenshots:
         images = []
@@ -204,9 +213,11 @@ with col1:
             images.append({"data": base64.b64encode(s.read()).decode(), "type": s.type})
         st.session_state.screenshots = images
         st.success(f"Загружено {len(images)} фото!")
+
     st.markdown("---")
     commands = {
         "📊 Портфель": "/портфель",
+        "🔍 Скрининг сигналы": "/сигналы скрининга",
         "🌍 Рынок": "/рынок",
         "🎯 Сигналы": "/сигналы",
         "📰 Обзор": "/обзор",
@@ -215,11 +226,12 @@ with col1:
         "₿ Крипто": "/крипто",
         "💰 Дивиденды": "/дивиденды",
         "📓 Журнал": "/журнал",
-        "🔄 Обновить": "/обновить",
+        "🎯 Стратегия 25-30%": "/стратегия",
     }
     for label, command in commands.items():
         if st.button(label, use_container_width=True):
             st.session_state.quick_command = command
+
     if st.button("🗑️ Очистить", use_container_width=True):
         st.session_state.messages = []
         save_history([])
@@ -239,7 +251,7 @@ with col2:
     if "quick_command" in st.session_state:
         prompt = st.session_state.pop("quick_command")
     else:
-        prompt = st.chat_input("Введите сообщение или команду...")
+        prompt = st.chat_input("Введите сообщение, команду или тикер...")
 
     if prompt:
         with st.chat_message("user"):
@@ -247,8 +259,7 @@ with col2:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("assistant"):
             with st.spinner("Анализирую..."):
-                today = datetime.now().strftime("%A, %d %B %Y, %H:%M")
-                system = get_system_prompt() + f"\n\nСегодня: {today}"
+                system = get_system_prompt()
                 if "xtb_data" in st.session_state:
                     system += f"\n\nДАННЫЕ ПОРТФЕЛЯ XTB:\n{st.session_state.xtb_data}"
                 messages = [{"role": "system", "content": system}]
