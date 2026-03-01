@@ -59,7 +59,7 @@ def get_price(ticker):
     except:
         return None
 
-def get_history(ticker, period="1mo"):
+def get_history_chart(ticker, period="1mo"):
     try:
         return yf.Ticker(ticker).history(period=period)
     except:
@@ -75,8 +75,7 @@ def card(name, price, open_price, volume, eur_pln=4.22, cost_pln=None, currency=
     pct = (price - open_price) / open_price * 100
     if cost_pln:
         rate = usd_pln if currency == "USD" else eur_pln
-        current_pln = price * volume * rate
-        pl = current_pln - cost_pln
+        pl = price * volume * rate - cost_pln
     else:
         pl = (price - open_price) * volume * eur_pln
     color = "#00c853" if pct >= 0 else "#ff1744"
@@ -88,6 +87,48 @@ def card(name, price, open_price, volume, eur_pln=4.22, cost_pln=None, currency=
         <div style='color:{color};font-size:13px;'>{arrow} {pct:+.2f}% &nbsp; P&L: {pl:+.2f} PLN</div>
     </div>
     """
+
+# CSS для фиксированного чата
+st.markdown("""
+<style>
+.chat-container {
+    height: 500px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+}
+.msg-user {
+    background: #1976d2;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 18px 18px 4px 18px;
+    margin: 4px 0 4px 20%;
+    font-size: 14px;
+    word-wrap: break-word;
+}
+.msg-assistant {
+    background: white;
+    color: #222;
+    padding: 10px 14px;
+    border-radius: 18px 18px 18px 4px;
+    margin: 4px 20% 4px 0;
+    font-size: 14px;
+    border: 1px solid #e8e8e8;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+.msg-time {
+    font-size: 10px;
+    color: #aaa;
+    margin: 2px 4px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
     st.session_state.messages = load_history()
@@ -128,7 +169,7 @@ if portfolio:
             if price:
                 prices[p["name"]] = price
                 st.markdown(card(p["name"], price, p["open_price"], p["volume"], eur_pln, p.get("cost_pln"), p.get("currency", "EUR"), usd_pln), unsafe_allow_html=True)
-        st.markdown(f"<div style='color:#888;font-size:12px;margin-top:4px;'>Свободные средства: {portfolio['accounts']['IKE']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#888;font-size:12px;'>Свободные средства: {portfolio['accounts']['IKE']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
 
     with col_tr:
         st.markdown("#### 💼 Moje Transakcje")
@@ -137,27 +178,22 @@ if portfolio:
             if price:
                 prices[p["name"]] = price
                 st.markdown(card(p["name"], price, p["open_price"], p["volume"], eur_pln, p.get("cost_pln"), p.get("currency", "USD"), usd_pln), unsafe_allow_html=True)
-        st.markdown(f"<div style='color:#888;font-size:12px;margin-top:4px;'>Свободные средства: {portfolio['accounts']['Transakcje']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='color:#888;font-size:12px;'>Свободные средства: {portfolio['accounts']['Transakcje']['cash']:.2f} PLN</div>", unsafe_allow_html=True)
 
     st.markdown("---")
 
     col_chart1, col_chart2 = st.columns([2, 1])
-
     with col_chart1:
         st.markdown("#### 📈 График актива")
         all_positions = ike_positions + tr_positions
         tickers = {p["name"]: p["ticker"] for p in all_positions}
         selected = st.selectbox("Выберите актив", list(tickers.keys()))
         period = st.radio("Период", ["1mo", "3mo", "6mo", "1y"], horizontal=True)
-        hist = get_history(tickers[selected], period)
+        hist = get_history_chart(tickers[selected], period)
         if hist is not None and not hist.empty:
             fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=hist.index, y=hist["Close"],
-                mode="lines", name=selected,
-                line=dict(color="#1976d2", width=2),
-                fill="tozeroy", fillcolor="rgba(25,118,210,0.1)"
-            ))
+            fig.add_trace(go.Scatter(x=hist.index, y=hist["Close"], mode="lines", name=selected,
+                                     line=dict(color="#1976d2", width=2), fill="tozeroy", fillcolor="rgba(25,118,210,0.1)"))
             fig.update_layout(margin=dict(l=0, r=0, t=10, b=0), height=250,
                               xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor="#f0f0f0"),
                               plot_bgcolor="white", paper_bgcolor="white")
@@ -174,8 +210,7 @@ if portfolio:
                 values.append(price * p["volume"] * rate)
         labels.append("Свободные средства")
         values.append(portfolio["accounts"]["IKE"]["cash"])
-        fig2 = px.pie(values=values, names=labels,
-                      color_discrete_sequence=["#1976d2", "#ff9800", "#4caf50", "#e0e0e0"])
+        fig2 = px.pie(values=values, names=labels, color_discrete_sequence=["#1976d2", "#ff9800", "#4caf50", "#e0e0e0"])
         fig2.update_layout(margin=dict(l=0, r=0, t=10, b=0), height=250)
         fig2.update_traces(textposition="inside", textinfo="percent")
         st.plotly_chart(fig2, use_container_width=True)
@@ -185,16 +220,12 @@ st.markdown("---")
 col1, col2 = st.columns([1, 3])
 
 with col1:
-    st.markdown("### 💼 Помощник")
-
-    # Поле для торгового плана
-    trade_ticker = st.text_input("Тикер для торгового плана", placeholder="BAC, SOFI, NVDA...")
+    st.markdown("### 🛠️ Панель")
+    trade_ticker = st.text_input("Тикер", placeholder="BAC, SOFI, NVDA...")
     if st.button("📈 Торговый план", use_container_width=True):
         if trade_ticker:
             st.session_state.quick_command = f"Дай точный торговый план для {trade_ticker.upper()}: точки входа, стоп-лосс, тейк-профит 1 и 2, размер позиции из бюджета 300 PLN, соотношение риск/прибыль."
-
     st.markdown("---")
-
     uploaded_file = st.file_uploader("Файл XTB", type=["csv","xlsx","xls","zip"], key="xtb_file")
     if uploaded_file:
         parsed_text, count = parse_xtb_file(uploaded_file)
@@ -203,8 +234,7 @@ with col1:
             st.session_state.xtb_data = parsed_text
         else:
             st.error(parsed_text)
-
-    screenshots = st.file_uploader("Скриншоты (до 5)", type=["png","jpg","jpeg"], key="screenshot_file", accept_multiple_files=True)
+    screenshots = st.file_uploader("Скриншоты", type=["png","jpg","jpeg"], key="screenshot_file", accept_multiple_files=True)
     if screenshots:
         images = []
         for s in screenshots[:5]:
@@ -213,65 +243,77 @@ with col1:
             images.append({"data": base64.b64encode(s.read()).decode(), "type": s.type})
         st.session_state.screenshots = images
         st.success(f"Загружено {len(images)} фото!")
-
     st.markdown("---")
     commands = {
         "📊 Портфель": "/портфель",
-        "🔍 Скрининг сигналы": "/сигналы скрининга",
-        "🌍 Рынок": "/рынок",
+        "🔍 Скрининг": "/сигналы скрининга",
         "🎯 Сигналы": "/сигналы",
-        "📰 Обзор": "/обзор",
+        "🌍 Рынок": "/рынок",
         "⚠️ Риски": "/риски",
         "🔄 Ребаланс": "/ребаланс",
+        "🎯 Стратегия": "/стратегия",
         "₿ Крипто": "/крипто",
-        "💰 Дивиденды": "/дивиденды",
-        "📓 Журнал": "/журнал",
-        "🎯 Стратегия 25-30%": "/стратегия",
     }
     for label, command in commands.items():
         if st.button(label, use_container_width=True):
             st.session_state.quick_command = command
-
-    if st.button("🗑️ Очистить", use_container_width=True):
+    if st.button("🗑️ Очистить чат", use_container_width=True):
         st.session_state.messages = []
         save_history([])
         st.rerun()
 
 with col2:
-    st.markdown("### 💬 Чат")
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            if isinstance(message["content"], list):
-                for block in message["content"]:
-                    if block["type"] == "text":
-                        st.markdown(block["text"])
-            else:
-                st.markdown(message["content"])
+    st.markdown("### 💬 Чат с помощником")
 
+    # Рендерим все сообщения в div с прокруткой
+    chat_html = "<div class='chat-container' id='chat-box'>"
+    for message in st.session_state.messages:
+        content = ""
+        if isinstance(message["content"], list):
+            for block in message["content"]:
+                if block["type"] == "text":
+                    content += block["text"]
+        else:
+            content = str(message["content"])
+        # Экранируем HTML
+        content = content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        if message["role"] == "user":
+            chat_html += f"<div class='msg-user'>{content}</div>"
+        else:
+            chat_html += f"<div class='msg-assistant'>{content}</div>"
+    chat_html += "</div>"
+
+    # Автопрокрутка вниз
+    chat_html += """
+    <script>
+        var chatBox = document.getElementById('chat-box');
+        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+    </script>
+    """
+    st.markdown(chat_html, unsafe_allow_html=True)
+
+    # Поле ввода
     if "quick_command" in st.session_state:
         prompt = st.session_state.pop("quick_command")
     else:
-        prompt = st.chat_input("Введите сообщение, команду или тикер...")
+        prompt = st.chat_input("Введите сообщение или команду...")
 
     if prompt:
-        with st.chat_message("user"):
-            st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("assistant"):
-            with st.spinner("Анализирую..."):
-                system = get_system_prompt()
-                if "xtb_data" in st.session_state:
-                    system += f"\n\nДАННЫЕ ПОРТФЕЛЯ XTB:\n{st.session_state.xtb_data}"
-                messages = [{"role": "system", "content": system}]
-                for m in st.session_state.messages[-5:]:
-                    if isinstance(m["content"], str):
-                        messages.append({"role": m["role"], "content": m["content"]})
-                response = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
-                    messages=messages,
-                    max_tokens=2048
-                )
-                reply = response.choices[0].message.content
-                st.markdown(reply)
+        with st.spinner("Анализирую..."):
+            system = get_system_prompt()
+            if "xtb_data" in st.session_state:
+                system += f"\n\nДАННЫЕ ПОРТФЕЛЯ XTB:\n{st.session_state.xtb_data}"
+            messages_api = [{"role": "system", "content": system}]
+            for m in st.session_state.messages[-6:]:
+                if isinstance(m["content"], str):
+                    messages_api.append({"role": m["role"], "content": m["content"]})
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=messages_api,
+                max_tokens=2048
+            )
+            reply = response.choices[0].message.content
         st.session_state.messages.append({"role": "assistant", "content": reply})
         save_history(st.session_state.messages)
+        st.rerun()
