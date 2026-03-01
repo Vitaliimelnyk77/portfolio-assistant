@@ -133,6 +133,12 @@ def cmd_signals(chat_id):
 
 def cmd_ask(chat_id, question):
     system = open("system_prompt.txt").read()
+    try:
+        eur_pln = yf.Ticker("EURPLN=X").fast_info.last_price
+        usd_pln = yf.Ticker("USDPLN=X").fast_info.last_price
+        system += f"\n\nТЕКУЩИЕ КУРСЫ: EUR/PLN={eur_pln:.4f}, USD/PLN={usd_pln:.4f}"
+    except:
+        pass
     resp = groq_client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         max_tokens=500,
