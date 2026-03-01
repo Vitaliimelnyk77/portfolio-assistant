@@ -265,32 +265,14 @@ with col1:
 with col2:
     st.markdown("### 💬 Чат с помощником")
 
-    # Рендерим все сообщения в div с прокруткой
-    chat_html = "<div class='chat-container' id='chat-box'>"
-    for message in st.session_state.messages:
-        content = ""
-        if isinstance(message["content"], list):
-            for block in message["content"]:
-                if block["type"] == "text":
-                    content += block["text"]
-        else:
-            content = str(message["content"])
-        # Экранируем HTML
-        content = content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        if message["role"] == "user":
-            chat_html += f"<div class='msg-user'>{content}</div>"
-        else:
-            chat_html += f"<div class='msg-assistant'>{content}</div>"
-    chat_html += "</div>"
-
-    # Автопрокрутка вниз
-    chat_html += """
-    <script>
-        var chatBox = document.getElementById('chat-box');
-        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
-    </script>
-    """
-    st.markdown(chat_html, unsafe_allow_html=True)
+    for message in st.session_state.messages[-20:]:
+        with st.chat_message(message["role"]):
+            if isinstance(message["content"], list):
+                for block in message["content"]:
+                    if block["type"] == "text":
+                        st.markdown(block["text"])
+            else:
+                st.markdown(message["content"])
 
     # Поле ввода
     if "quick_command" in st.session_state:
