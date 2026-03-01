@@ -40,7 +40,7 @@ def get_system_prompt():
         if sr["signals"]:
             system += f"\n\nПОСЛЕДНИЙ СКРИНИНГ ({sr['date']}):\n"
             for s in sr["signals"][:5]:
-                system += f"- {s['ticker']}: RSI={s['rsi']:.0f}, {', '.join(s['reasons'])}\n"
+                system += f"- {s['ticker']}: цена={s['price']:.2f} USD, RSI={s['rsi']:.0f}, изм. за неделю={s['change_1w']:.1f}%, {chr(44).join(s['reasons'])}\n"
     except:
         pass
     return system
