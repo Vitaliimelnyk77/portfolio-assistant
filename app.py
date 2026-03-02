@@ -27,6 +27,9 @@ def save_history(messages):
     with open(HISTORY_FILE, "w") as f:
         json.dump(to_save, f, ensure_ascii=False, indent=2)
 
+def now_str():
+    return datetime.now().strftime("%H:%M  %d.%m")
+
 def get_system_prompt():
     system = open("system_prompt.txt", "r", encoding="utf-8").read()
     now = datetime.now().strftime("%A, %d %B %Y, %H:%M")
@@ -297,8 +300,8 @@ with col1:
             ic.append({"type": "text", "text": "Analyze screenshot. If broker - extract all positions, prices, P&L. If chart - describe trend, support/resistance levels. Answer in Russian."})
             vr = vc.chat.completions.create(model="meta-llama/llama-4-scout-17b-16e-instruct", messages=[{"role": "user", "content": ic}], max_tokens=1500)
             st.session_state.screenshot_analysis = vr.choices[0].message.content
-            st.session_state.messages.append({"role": "user", "content": "Анализ скриншота"})
-            st.session_state.messages.append({"role": "assistant", "content": vr.choices[0].message.content})
+            st.session_state.messages.append({"role": "user", "content": "Анализ скриншота", "time": now_str()})
+            st.session_state.messages.append({"role": "assistant", "content": vr.choices[0].message.content, "time": now_str()})
             save_history(st.session_state.messages)
             st.rerun()
         except Exception as e:
