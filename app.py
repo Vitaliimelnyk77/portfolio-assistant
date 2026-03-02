@@ -226,16 +226,13 @@ with col1:
             new_tp = st.number_input("Тейк-профит", min_value=0.0, step=0.01, format="%.2f", value=0.0)
             submitted = st.form_submit_button("✅ Добавить позицию", use_container_width=True)
             if submitted and new_ticker and new_volume > 0:
-                st_autorefresh(interval=5*60*1000, limit=None, key="auto_refresh")
-portfolio = load_portfolio()
                 new_pos = {"name": new_name or new_ticker.upper(), "ticker": new_ticker.upper(), "volume": new_volume, "open_price": new_open, "account": new_account, "currency": new_currency, "cost_pln": new_cost if new_cost > 0 else new_open * new_volume * (3.57 if new_currency == "USD" else 4.22), "stop_loss": new_sl if new_sl > 0 else None, "take_profit": new_tp if new_tp > 0 else None}
                 portfolio["positions"].append(new_pos)
                 save_portfolio(portfolio)
                 st.success(f"✅ {new_pos['name']} добавлен!")
                 st.rerun()
     elif action == "✏️ Изменить":
-        st_autorefresh(interval=5*60*1000, limit=None, key="auto_refresh")
-portfolio = load_portfolio()
+        portfolio = load_portfolio()
         if portfolio and portfolio["positions"]:
             pos_names = [f"{p['name']} ({p['account']})" for p in portfolio["positions"]]
             sel_idx = st.selectbox("Позиция", range(len(pos_names)), format_func=lambda i: pos_names[i], key="edit_sel")
@@ -253,8 +250,7 @@ portfolio = load_portfolio()
                     st.success(f"💾 {p['name']} обновлён!")
                     st.rerun()
     elif action == "❌ Удалить":
-        st_autorefresh(interval=5*60*1000, limit=None, key="auto_refresh")
-portfolio = load_portfolio()
+        portfolio = load_portfolio()
         if portfolio and portfolio["positions"]:
             pos_names = [f"{p['name']} ({p['account']})" for p in portfolio["positions"]]
             del_idx = st.selectbox("Позиция", range(len(pos_names)), format_func=lambda i: pos_names[i], key="del_sel")
@@ -272,8 +268,7 @@ portfolio = load_portfolio()
         bal_cash = st.number_input("Свободные средства (PLN)", min_value=0.0, step=1.0, format="%.2f")
         bal_submit = st.form_submit_button("💾 Обновить", use_container_width=True)
         if bal_submit:
-            st_autorefresh(interval=5*60*1000, limit=None, key="auto_refresh")
-portfolio = load_portfolio()
+            portfolio = load_portfolio()
             if bal_balance > 0:
                 portfolio["accounts"][bal_account]["balance"] = bal_balance
             portfolio["accounts"][bal_account]["cash"] = bal_cash
