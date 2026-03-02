@@ -1,0 +1,75 @@
+{
+  "updated": "02.03.2026",
+  "accounts": {
+    "IKE": {
+      "balance": 4802.56,
+      "cash": 98.66
+    },
+    "Transakcje": {
+      "balance": 441.64,
+      "cash": 300.91
+    }
+  },
+  "positions": [
+    {
+      "name": "VGWL.DE",
+      "ticker": "VGWL.DE",
+      "volume": 6.3387,
+      "open_price": 146.0878,
+      "account": "IKE",
+      "cost_pln": 3946.14,
+      "currency": "EUR"
+    },
+    {
+      "name": "Bitcoin ETN",
+      "ticker": "IB1T.DE",
+      "volume": 41.6954,
+      "open_price": 5.619,
+      "account": "IKE",
+      "cost_pln": 997.965,
+      "currency": "EUR"
+    },
+    {
+      "name": "Silver ETC",
+      "ticker": "XAD6.DE",
+      "volume": 0.1698,
+      "open_price": 690.3,
+      "account": "IKE",
+      "cost_pln": 499.294,
+      "currency": "EUR"
+    },
+    {
+      "name": "NIO",
+      "ticker": "NIO",
+      "volume": 8.1302,
+      "open_price": 5.12,
+      "account": "Transakcje",
+      "currency": "USD",
+      "cost_pln": 149.35,
+      "stop_loss": 4.6,
+      "take_profit": 5.4
+    },
+    {
+      "name": "Upstart",
+      "ticker": "UPST",
+      "volume": 3.1272,
+      "open_price": 26.02,
+      "account": "Transakcje",
+      "currency": "USD",
+      "cost_pln": 291.94,
+      "stop_loss": 24.5,
+      "take_profit": 31.0
+    },
+    {
+      "name": "SoFi",
+      "ticker": "SOFI",
+      "volume": 4.8183,
+      "open_price": 17.84,
+      "account": "Transakcje",
+      "currency": "USD",
+      "cost_pln": 297.17,
+      "stop_loss": 16.5,
+      "take_profit": 20.0
+    }
+  ]
+}
