@@ -318,20 +318,12 @@ with col1:
 
 with col2:
     st.markdown("### 💬 Чат с помощником")
-    for message in st.session_state.messages[-20:]:
-        with st.chat_message(message["role"]):
-            if isinstance(message["content"], list):
-                for block in message["content"]:
-                    if block["type"] == "text":
-                        st.markdown(block["text"])
-            else:
-                st.markdown(message["content"])
     if "quick_command" in st.session_state:
         prompt = st.session_state.pop("quick_command")
     else:
         prompt = st.chat_input("Введите сообщение или команду...")
     if prompt:
-        st.session_state.messages.append({"role": "user", "content": prompt})
+        st.session_state.messages.append({"role": "user", "content": prompt, "time": now_str()})
         with st.spinner("Анализирую..."):
             system = get_system_prompt()
             if "xtb_data" in st.session_state:
@@ -344,6 +336,17 @@ with col2:
                     messages_api.append({"role": m["role"], "content": m["content"]})
             response = client.chat.completions.create(model="llama-3.3-70b-versatile", messages=messages_api, max_tokens=2048)
             reply = response.choices[0].message.content
-        st.session_state.messages.append({"role": "assistant", "content": reply})
+        st.session_state.messages.append({"role": "assistant", "content": reply, "time": now_str()})
         save_history(st.session_state.messages)
         st.rerun()
+    for message in st.session_state.messages[-20:]:
+        with st.chat_message(message["role"]):
+            if isinstance(message["content"], list):
+                for block in message["content"]:
+                    if block["type"] == "text":
+                        st.markdown(block["text"])
+            else:
+                st.markdown(message["content"])
+            ts = message.get("time", "")
+            if ts:
+                st.caption(ts)
