@@ -125,10 +125,23 @@ st_autorefresh(interval=5*60*1000, limit=None, key="auto_refresh")
 portfolio = load_portfolio()
 
 if portfolio:
-    ike_bal = portfolio["accounts"].get("IKE", {}).get("balance", 0)
-    tr_bal = portfolio["accounts"].get("Transakcje", {}).get("balance", 0)
-    total = ike_bal + tr_bal
     eur_pln, usd_pln = get_rates()
+    ike_cash = portfolio["accounts"].get("IKE", {}).get("cash", 0)
+    tr_cash = portfolio["accounts"].get("Transakcje", {}).get("cash", 0)
+    ike_positions_val = 0
+    tr_positions_val = 0
+    for p in portfolio["positions"]:
+        pr = get_price(p["ticker"])
+        if pr:
+            rate = usd_pln if p.get("currency") == "USD" else eur_pln
+            val = pr * p["volume"] * rate
+            if p["account"] == "IKE":
+                ike_positions_val += val
+            else:
+                tr_positions_val += val
+    ike_bal = ike_positions_val + ike_cash
+    tr_bal = tr_positions_val + tr_cash
+    total = ike_bal + tr_bal
     st.markdown(f"""
     <div style='background:linear-gradient(135deg,#1976d2,#1565c0);padding:20px;border-radius:14px;margin-bottom:16px;'>
         <div style='color:rgba(255,255,255,0.7);font-size:13px;'>Общий баланс портфеля</div>
@@ -139,7 +152,7 @@ if portfolio:
             <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>EUR/PLN</span><br><span style='color:white;font-size:16px;'>{eur_pln:.4f}</span></div>
             <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>USD/PLN</span><br><span style='color:white;font-size:16px;'>{usd_pln:.4f}</span></div>
         </div>
-        <div style='color:rgba(255,255,255,0.5);font-size:10px;margin-top:8px;'>Обновлено: {portfolio.get("updated", "—")}</div>
+        <div style='color:rgba(255,255,255,0.5);font-size:10px;margin-top:8px;'>Обновлено: {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}</div>
     </div>
     """, unsafe_allow_html=True)
     col_ike, col_tr = st.columns(2)
