@@ -143,9 +143,10 @@ if portfolio:
     tr_bal = tr_positions_val + tr_cash
     total = ike_bal + tr_bal
     st.markdown(f"""
-    <div style='background:linear-gradient(135deg,#1976d2,#1565c0);padding:20px;border-radius:14px;margin-bottom:16px;'>
+    <div style='background:linear-gradient(135deg,#42a5f5,#1e88e5);padding:20px;border-radius:14px;margin-bottom:16px;'>
         <div style='color:rgba(255,255,255,0.7);font-size:13px;'>Общий баланс портфеля</div>
         <div style='color:white;font-size:38px;font-weight:bold;margin:4px 0;'>{total:,.2f} PLN</div>
+        <div style='color:{"#00c853" if total >= portfolio.get("initial_capital", 0) else "#ff1744"};font-size:16px;margin-top:2px;'>{"▲" if total >= portfolio.get("initial_capital", 0) else "▼"} P&L: {total - portfolio.get("initial_capital", 0):+,.2f} PLN ({(total - portfolio.get("initial_capital", 0)) / portfolio.get("initial_capital", 1) * 100:+.2f}%)</div>
         <div style='display:flex;gap:24px;margin-top:8px;'>
             <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>IKE</span><br><span style='color:white;font-size:16px;'>{ike_bal:,.2f} PLN</span></div>
             <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>Transakcje</span><br><span style='color:white;font-size:16px;'>{tr_bal:,.2f} PLN</span></div>
