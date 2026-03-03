@@ -1,13 +1,13 @@
 {
-  "updated": "03.03.2026",
+  "updated": "03.03.2026 15:39",
   "accounts": {
     "IKE": {
       "balance": 5522.2,
       "cash": 98.68
     },
     "Transakcje": {
-      "balance": 783.49,
-      "cash": 3.08
+      "balance": 777.96,
+      "cash": 138.03
     }
   },
   "positions": [
@@ -39,17 +39,6 @@
       "currency": "EUR"
     },
     {
-      "name": "NIO",
-      "ticker": "NIO",
-      "volume": 8.1302,
-      "open_price": 5.12,
-      "account": "Transakcje",
-      "currency": "USD",
-      "cost_pln": 149.35,
-      "stop_loss": 4.6,
-      "take_profit": 5.4
-    },
-    {
       "name": "Upstart",
       "ticker": "UPST",
       "volume": 3.1272,
@@ -64,23 +53,12 @@
       "name": "SoFi",
       "ticker": "SOFI",
       "volume": 4.8183,
-      "open_price": 17.84,
+      "open_price": 17.19,
       "account": "Transakcje",
       "currency": "USD",
       "cost_pln": 297.17,
       "stop_loss": 16.5,
       "take_profit": 20.0
-    },
-    {
-      "name": "NQ ",
-      "ticker": "АКЦИИ",
-      "volume": 8.1302,
-      "open_price": 5.12,
-      "account": "Transakcje",
-      "currency": "USD",
-      "cost_pln": 148.60704768,
-      "stop_loss": 4.6,
-      "take_profit": 5.4
     }
   ]
 }
