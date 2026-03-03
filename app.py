@@ -144,16 +144,16 @@ if portfolio:
     total = ike_bal + tr_bal
     st.markdown(f"""
     <div style='background:linear-gradient(135deg,#42a5f5,#1e88e5);padding:20px;border-radius:14px;margin-bottom:16px;'>
-        <div style='color:rgba(255,255,255,0.7);font-size:13px;'>Общий баланс портфеля</div>
-        <div style='color:white;font-size:38px;font-weight:bold;margin:4px 0;'>{total:,.2f} PLN</div>
-        <div style='color:{"#00c853" if total >= portfolio.get("initial_capital", 0) else "#ff1744"};font-size:16px;margin-top:2px;'>{"▲" if total >= portfolio.get("initial_capital", 0) else "▼"} P&L: {total - portfolio.get("initial_capital", 0):+,.2f} PLN ({(total - portfolio.get("initial_capital", 0)) / portfolio.get("initial_capital", 1) * 100:+.2f}%)</div>
+        <div style='color:rgba(255,255,255,0.7);font-size:26px;'>Общий баланс портфеля</div>
+        <div style='color:{"#00c853" if total >= portfolio.get("initial_capital", 0) else "#ff1744"};font-size:38px;font-weight:bold;margin:4px 0;'>{total:,.2f} PLN</div>
+        <div style='color:{"#00c853" if total >= portfolio.get("initial_capital", 0) else "#ff1744"};font-size:48px;margin-top:6px;'>{"▲" if total >= portfolio.get("initial_capital", 0) else "▼"} P&L: {total - portfolio.get("initial_capital", 0):+,.2f} PLN ({(total - portfolio.get("initial_capital", 0)) / portfolio.get("initial_capital", 1) * 100:+.2f}%)</div>
         <div style='display:flex;gap:24px;margin-top:8px;'>
-            <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>IKE</span><br><span style='color:white;font-size:16px;'>{ike_bal:,.2f} PLN</span></div>
-            <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>Transakcje</span><br><span style='color:white;font-size:16px;'>{tr_bal:,.2f} PLN</span></div>
-            <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>EUR/PLN</span><br><span style='color:white;font-size:16px;'>{eur_pln:.4f}</span></div>
-            <div><span style='color:rgba(255,255,255,0.7);font-size:12px;'>USD/PLN</span><br><span style='color:white;font-size:16px;'>{usd_pln:.4f}</span></div>
+            <div><span style='color:rgba(255,255,255,0.7);font-size:24px;'>IKE</span><br><span style='color:white;font-size:32px;'>{ike_bal:,.2f} PLN</span></div>
+            <div><span style='color:rgba(255,255,255,0.7);font-size:24px;'>Transakcje</span><br><span style='color:white;font-size:32px;'>{tr_bal:,.2f} PLN</span></div>
+            <div><span style='color:rgba(255,255,255,0.7);font-size:24px;'>EUR/PLN</span><br><span style='color:white;font-size:32px;'>{eur_pln:.4f}</span></div>
+            <div><span style='color:rgba(255,255,255,0.7);font-size:24px;'>USD/PLN</span><br><span style='color:white;font-size:32px;'>{usd_pln:.4f}</span></div>
         </div>
-        <div style='color:rgba(255,255,255,0.5);font-size:10px;margin-top:8px;'>Обновлено: {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}</div>
+        <div style='color:rgba(255,255,255,0.5);font-size:20px;margin-top:16px;'>Обновлено: {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}</div>
     </div>
     """, unsafe_allow_html=True)
     col_ike, col_tr = st.columns(2)
