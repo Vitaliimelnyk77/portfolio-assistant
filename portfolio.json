@@ -1,13 +1,13 @@
 {
-  "updated": "02.03.2026",
+  "updated": "03.03.2026",
   "accounts": {
     "IKE": {
-      "balance": 4802.56,
-      "cash": 98.66
+      "balance": 5522.2,
+      "cash": 98.68
     },
     "Transakcje": {
-      "balance": 441.64,
-      "cash": 300.91
+      "balance": 783.49,
+      "cash": 3.08
     }
   },
   "positions": [
@@ -70,6 +70,17 @@
       "cost_pln": 297.17,
       "stop_loss": 16.5,
       "take_profit": 20.0
+    },
+    {
+      "name": "NQ ",
+      "ticker": "АКЦИИ",
+      "volume": 8.1302,
+      "open_price": 5.12,
+      "account": "Transakcje",
+      "currency": "USD",
+      "cost_pln": 148.60704768,
+      "stop_loss": 4.6,
+      "take_profit": 5.4
     }
   ]
 }
