@@ -260,13 +260,14 @@ with col1:
             images.append({"data": base64.b64encode(s.read()).decode(), "type": s.type})
         st.session_state.screenshots = images
         try:
-            parts = []
+            vc = Groq(api_key=GROQ_API_KEY)
+            ic = []
             for img in images:
                 mt = img["type"] if "/" in img["type"] else "image/" + img["type"]
-                parts.append({"mime_type": mt, "data": img["data"]})
-            parts.append("Analyze screenshot. If broker - extract all positions, prices, P&L. If chart - describe trend, support/resistance levels. Answer in Russian.")
-            vr = gemini_model.generate_content(parts)
-            vision_text = vr.text
+                ic.append({"type": "image_url", "image_url": {"url": "data:" + mt + ";base64," + img["data"]}})
+            ic.append({"type": "text", "text": "Analyze screenshot. Extract positions, prices, P&L. Answer in Russian."})
+            vr = vc.chat.completions.create(model="meta-llama/llama-4-scout-17b-16e-instruct", messages=[{"role": "user", "content": ic}], max_tokens=1500)
+            vision_text = vr.choices[0].message.content
             st.session_state.screenshot_analysis = vision_text
             st.session_state.messages.append({"role": "user", "content": "Анализ скриншота", "time": now_str()})
             st.session_state.messages.append({"role": "assistant", "content": vision_text, "time": now_str()})
