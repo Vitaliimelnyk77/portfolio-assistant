@@ -4,13 +4,13 @@ import json
 import os
 from datetime import datetime
 from groq import Groq
+import google.generativeai as genai
 from xtb_parser import parse_xtb_file
 import yfinance as yf
 import plotly.graph_objects as go
 import plotly.express as px
 from streamlit_autorefresh import st_autorefresh
 
-GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 HISTORY_FILE = "chat_history.json"
 PORTFOLIO_FILE = "portfolio.json"
 
@@ -119,7 +119,10 @@ st.markdown("""
 
 if "messages" not in st.session_state:
     st.session_state.messages = load_history()
+GROQ_API_KEY = "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"
 client = Groq(api_key=GROQ_API_KEY)
+genai.configure(api_key="AIzaSyAs--BqAnTgRDHow-Rv6RuOwNgOOv3Kj8Y")
+gemini_model = genai.GenerativeModel("gemini-2.0-flash")
 st.set_page_config(page_title="Инвестиционный помощник", page_icon="💼", layout="wide")
 st_autorefresh(interval=5*60*1000, limit=None, key="auto_refresh")
 portfolio = load_portfolio()
@@ -257,20 +260,38 @@ with col1:
             images.append({"data": base64.b64encode(s.read()).decode(), "type": s.type})
         st.session_state.screenshots = images
         try:
-            vc = Groq(api_key=GROQ_API_KEY)
-            ic = []
+            parts = []
             for img in images:
                 mt = img["type"] if "/" in img["type"] else "image/" + img["type"]
-                ic.append({"type": "image_url", "image_url": {"url": "data:" + mt + ";base64," + img["data"]}})
-            ic.append({"type": "text", "text": "Analyze screenshot. If broker - extract all positions, prices, P&L. If chart - describe trend, support/resistance levels. Answer in Russian."})
-            vr = vc.chat.completions.create(model="meta-llama/llama-4-scout-17b-16e-instruct", messages=[{"role": "user", "content": ic}], max_tokens=1500)
-            st.session_state.screenshot_analysis = vr.choices[0].message.content
+                parts.append({"mime_type": mt, "data": img["data"]})
+            parts.append("Analyze screenshot. If broker - extract all positions, prices, P&L. If chart - describe trend, support/resistance levels. Answer in Russian.")
+            vr = gemini_model.generate_content(parts)
+            vision_text = vr.text
+            st.session_state.screenshot_analysis = vision_text
             st.session_state.messages.append({"role": "user", "content": "Анализ скриншота", "time": now_str()})
-            st.session_state.messages.append({"role": "assistant", "content": vr.choices[0].message.content, "time": now_str()})
+            st.session_state.messages.append({"role": "assistant", "content": vision_text, "time": now_str()})
             save_history(st.session_state.messages)
             st.rerun()
         except Exception as e:
             st.error("Vision error: " + str(e))
+    st.markdown("---")
+    if st.button("🔍 Запустить скрининг", use_container_width=True, type="primary"):
+        with st.spinner("Сканирую рынок..."):
+            import subprocess
+            result = subprocess.run(["/root/portfolio-assistant/venv/bin/python3", "screener.py"], capture_output=True, text=True, cwd="/root/portfolio-assistant")
+            if result.returncode == 0:
+                st.success("Скрининг завершён! Результаты в Telegram и в чате.")
+                try:
+                    import json as jj
+                    sr = jj.load(open("screener_results.json"))
+                    summary = f"🔍 Скрининг {sr['date']}: {sr['count']} сигналов из {sr['total']} активов\n"
+                    for r in sr["results"]:
+                        summary += f"⭐{'⭐'*min(r['score']-1,4)} {r['ticker']}: {r['price']:.2f} | RSI={r['rsi']:.0f} | {r['change_1d']:+.1f}% | {', '.join(r['reasons'])}\n"
+                    st.session_state["pending_command"] = summary
+                except:
+                    pass
+            else:
+                st.error(f"Ошибка: {result.stderr[:200]}")
     st.markdown("---")
     cmd_options = ["📊 Портфель", "🔍 Скрининг", "🎯 Сигналы", "🌍 Рынок", "⚠️ Риски", "🔄 Ребаланс", "🎯 Стратегия", "₿ Крипто"]
     cmd_map = {"📊 Портфель": "/портфель", "🔍 Скрининг": "/сигналы скрининга", "🎯 Сигналы": "/сигналы", "🌍 Рынок": "/рынок", "⚠️ Риски": "/риски", "🔄 Ребаланс": "/ребаланс", "🎯 Стратегия": "/стратегия", "₿ Крипто": "/крипто"}
@@ -301,10 +322,15 @@ with col2:
             if "screenshot_analysis" in st.session_state:
                 system += f"\n\nАНАЛИЗ СКРИНШОТОВ:\n{st.session_state.screenshot_analysis}"
             messages_api = [{"role": "system", "content": system}]
-            for m in st.session_state.messages[-6:]:
+            for m in st.session_state.messages[-4:]:
                 if isinstance(m["content"], str):
                     messages_api.append({"role": m["role"], "content": m["content"]})
-            response = client.chat.completions.create(model="llama-3.3-70b-versatile", messages=messages_api, max_tokens=2048)
+            try:
+                response = client.chat.completions.create(model="llama-3.3-70b-versatile", messages=messages_api, max_tokens=1024)
+            except Exception as api_err:
+                st.session_state.messages.append({"role": "assistant", "content": f"⚠️ Ошибка API: {str(api_err)[:200]}", "time": now_str()})
+                save_history(st.session_state.messages)
+                st.rerun()
             reply = response.choices[0].message.content
         st.session_state.messages.append({"role": "assistant", "content": reply, "time": now_str()})
         save_history(st.session_state.messages)

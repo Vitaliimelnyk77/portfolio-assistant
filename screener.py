@@ -120,6 +120,13 @@ if signals:
         lines.append(f"   📋 {', '.join(reasons)}\n")
     
     lines.append("💡 Это информация для анализа, не торговый совет!")
+    # Сохраняем результаты
+    import json as jjson
+    results = []
+    for score, ticker, d, reasons in signals[:8]:
+        results.append({"ticker": ticker, "score": score, "price": d["price"], "rsi": d["rsi"], "change_1d": d["change_1d"], "reasons": reasons})
+    with open("screener_results.json","w") as rf:
+        jjson.dump({"date": now, "count": len(signals), "total": len(UNIVERSE), "results": results}, rf, ensure_ascii=False, indent=2)
     send("\n".join(lines))
     print(f"Отправлено {len(signals)} сигналов!")
 else:
