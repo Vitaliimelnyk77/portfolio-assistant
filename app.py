@@ -359,7 +359,7 @@ with col2:
         st.session_state.messages.append({"role": "assistant", "content": reply, "time": now_str()})
         save_history(st.session_state.messages)
         st.rerun()
-    for message in st.session_state.messages[-20:]:
+    for message in reversed(st.session_state.messages[-20:]):
         with st.chat_message(message["role"]):
             if isinstance(message["content"], list):
                 for block in message["content"]:
