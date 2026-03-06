@@ -1,13 +1,13 @@
 {
-  "updated": "03.03.2026 21:13",
+  "updated": "06.03.2026 22:15",
   "accounts": {
     "IKE": {
-      "balance": 5536.42,
-      "cash": 98.68
+      "balance": 5495.85,
+      "cash": 0.0
     },
     "Transakcje": {
-      "balance": 777.96,
-      "cash": 138.03
+      "balance": 788.9,
+      "cash": 138.13
     }
   },
   "positions": [
