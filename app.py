@@ -322,20 +322,25 @@ with col1:
         except Exception as e:
             st.error("Vision error: " + str(e))
     st.markdown("---")
-    commands = {"📊 Портфель": "/портфель", "🔍 Скрининг": "/сигналы скрининга", "🎯 Сигналы": "/сигналы", "🌍 Рынок": "/рынок", "⚠️ Риски": "/риски", "🔄 Ребаланс": "/ребаланс", "🎯 Стратегия": "/стратегия", "₿ Крипто": "/крипто"}
-    for label, command in commands.items():
-        if st.button(label, use_container_width=True):
-            st.session_state.quick_command = command
+    cmd_options = ["📊 Портфель", "🔍 Скрининг", "🎯 Сигналы", "🌍 Рынок", "⚠️ Риски", "🔄 Ребаланс", "🎯 Стратегия", "₿ Крипто"]
+    cmd_map = {"📊 Портфель": "/портфель", "🔍 Скрининг": "/сигналы скрининга", "🎯 Сигналы": "/сигналы", "🌍 Рынок": "/рынок", "⚠️ Риски": "/риски", "🔄 Ребаланс": "/ребаланс", "🎯 Стратегия": "/стратегия", "₿ Крипто": "/крипто"}
+    selected = st.radio("Быстрые команды", cmd_options, index=None, key="cmd_radio", label_visibility="collapsed")
+    if selected and st.session_state.get("last_cmd") != selected:
+        st.session_state["pending_command"] = cmd_map[selected]
+        st.session_state["last_cmd"] = selected
     if st.button("🗑️ Очистить чат", use_container_width=True):
         st.session_state.messages = []
         save_history([])
-        st.rerun()
 
 with col2:
     st.markdown("### 💬 Чат с помощником")
-    if "quick_command" in st.session_state:
-        prompt = st.session_state.pop("quick_command")
-    else:
+    prompt = None
+    for key in ["pending_command", "quick_command"]:
+        if key in st.session_state:
+            prompt = st.session_state[key]
+            del st.session_state[key]
+            break
+    if not prompt:
         prompt = st.chat_input("Введите сообщение или команду...")
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt, "time": now_str()})
