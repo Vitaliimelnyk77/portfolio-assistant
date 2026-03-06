@@ -225,56 +225,6 @@ with col1:
         if trade_ticker:
             st.session_state.quick_command = f"Дай точный торговый план для {trade_ticker.upper()}: точки входа, стоп-лосс, тейк-профит 1 и 2, размер позиции из бюджета 300 PLN, соотношение риск/прибыль."
     st.markdown("---")
-    st.markdown("#### ✏️ Управление позициями")
-    action = st.selectbox("Действие", ["➕ Добавить", "✏️ Изменить", "❌ Удалить"], key="pos_action")
-    if action == "➕ Добавить":
-        with st.form("add_position", clear_on_submit=True):
-            new_name = st.text_input("Название", placeholder="Apple")
-            new_ticker = st.text_input("Тикер Yahoo", placeholder="AAPL")
-            new_account = st.selectbox("Счёт", ["Transakcje", "IKE"])
-            new_volume = st.number_input("Количество", min_value=0.0001, step=0.01, format="%.4f")
-            new_open = st.number_input("Цена входа", min_value=0.01, step=0.01, format="%.2f")
-            new_currency = st.selectbox("Валюта", ["USD", "EUR"])
-            new_cost = st.number_input("Стоимость (PLN)", min_value=0.0, step=1.0, format="%.2f")
-            new_sl = st.number_input("Стоп-лосс", min_value=0.0, step=0.01, format="%.2f", value=0.0)
-            new_tp = st.number_input("Тейк-профит", min_value=0.0, step=0.01, format="%.2f", value=0.0)
-            submitted = st.form_submit_button("✅ Добавить позицию", use_container_width=True)
-            if submitted and new_ticker and new_volume > 0:
-                new_pos = {"name": new_name or new_ticker.upper(), "ticker": new_ticker.upper(), "volume": new_volume, "open_price": new_open, "account": new_account, "currency": new_currency, "cost_pln": new_cost if new_cost > 0 else new_open * new_volume * (3.57 if new_currency == "USD" else 4.22), "stop_loss": new_sl if new_sl > 0 else None, "take_profit": new_tp if new_tp > 0 else None}
-                portfolio["positions"].append(new_pos)
-                save_portfolio(portfolio)
-                st.success(f"✅ {new_pos['name']} добавлен!")
-                st.rerun()
-    elif action == "✏️ Изменить":
-        portfolio = load_portfolio()
-        if portfolio and portfolio["positions"]:
-            pos_names = [f"{p['name']} ({p['account']})" for p in portfolio["positions"]]
-            sel_idx = st.selectbox("Позиция", range(len(pos_names)), format_func=lambda i: pos_names[i], key="edit_sel")
-            p = portfolio["positions"][sel_idx]
-            with st.form("edit_position"):
-                ed_volume = st.number_input("Количество", value=p["volume"], step=0.01, format="%.4f")
-                ed_open = st.number_input("Цена входа", value=p["open_price"], step=0.01, format="%.2f")
-                ed_cost = st.number_input("Стоимость (PLN)", value=p.get("cost_pln", 0.0), step=1.0, format="%.2f")
-                ed_sl = st.number_input("Стоп-лосс", value=p.get("stop_loss") or 0.0, step=0.01, format="%.2f")
-                ed_tp = st.number_input("Тейк-профит", value=p.get("take_profit") or 0.0, step=0.01, format="%.2f")
-                submitted = st.form_submit_button("💾 Сохранить", use_container_width=True)
-                if submitted:
-                    portfolio["positions"][sel_idx].update({"volume": ed_volume, "open_price": ed_open, "cost_pln": ed_cost, "stop_loss": ed_sl if ed_sl > 0 else None, "take_profit": ed_tp if ed_tp > 0 else None})
-                    save_portfolio(portfolio)
-                    st.success(f"💾 {p['name']} обновлён!")
-                    st.rerun()
-    elif action == "❌ Удалить":
-        portfolio = load_portfolio()
-        if portfolio and portfolio["positions"]:
-            pos_names = [f"{p['name']} ({p['account']})" for p in portfolio["positions"]]
-            del_idx = st.selectbox("Позиция", range(len(pos_names)), format_func=lambda i: pos_names[i], key="del_sel")
-            if st.button("🗑️ Удалить позицию", use_container_width=True, type="primary"):
-                removed = portfolio["positions"].pop(del_idx)
-                save_portfolio(portfolio)
-                st.success(f"🗑️ {removed['name']} удалён!")
-                st.rerun()
-
-    st.markdown("---")
     st.markdown("#### 💰 Обновить баланс")
     with st.form("update_balance"):
         bal_account = st.selectbox("Счёт", ["IKE", "Transakcje"], key="bal_acc")
