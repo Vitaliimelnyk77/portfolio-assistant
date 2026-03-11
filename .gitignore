@@ -1,2 +1,8 @@
 venv/
 __pycache__/
+*.pyc
+chat_history.json
+screener_results.json
+sl_monitor.log
+*.bak*
+.env

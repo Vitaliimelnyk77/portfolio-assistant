@@ -4,6 +4,9 @@ import json
 import os
 from datetime import datetime
 from groq import Groq
+import os
+from dotenv import load_dotenv
+load_dotenv()
 import google.generativeai as genai
 from xtb_parser import parse_xtb_file
 import yfinance as yf
@@ -119,9 +122,9 @@ st.markdown("""
 
 if "messages" not in st.session_state:
     st.session_state.messages = load_history()
-GROQ_API_KEY = "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"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
-genai.configure(api_key="AIzaSyAs--BqAnTgRDHow-Rv6RuOwNgOOv3Kj8Y")
+genai.configure(api_key=os.getenv("GEMINI_API_KEY", ""))
 gemini_model = genai.GenerativeModel("gemini-2.0-flash")
 st.set_page_config(page_title="Инвестиционный помощник", page_icon="💼", layout="wide")
 st_autorefresh(interval=5*60*1000, limit=None, key="auto_refresh")
