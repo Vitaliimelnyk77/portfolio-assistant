@@ -1,9 +1,9 @@
 {
-  "updated": "11.03.2026 12:26",
+  "updated": "11.03.2026 13:10",
   "accounts": {
     "IKE": {
-      "balance": 5535.67,
-      "cash": 0.0
+      "balance": 5520.84,
+      "cash": 98.74
     },
     "Transakcje": {
       "balance": 780.0,
@@ -59,6 +59,17 @@
       "cost_pln": 297.17,
       "stop_loss": 16.5,
       "take_profit": 20.0
+    },
+    {
+      "name": "Nike",
+      "ticker": "NKE",
+      "volume": 0.4828,
+      "open_price": 55.84,
+      "account": "Transakcje",
+      "currency": "USD",
+      "cost_pln": 100.0,
+      "stop_loss": 51.0,
+      "take_profit": 65.0
     }
   ],
   "initial_capital": 6700.0

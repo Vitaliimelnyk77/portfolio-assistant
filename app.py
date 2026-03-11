@@ -34,6 +34,39 @@ def save_history(messages):
 def now_str():
     return datetime.now().strftime("%H:%M  %d.%m")
 
+
+def auto_update_from_vision(vision_text):
+    try:
+        vc = Groq(api_key=GROQ_API_KEY)
+        prompt = "Based on this screenshot analysis, extract portfolio data as JSON.\nReturn ONLY valid JSON, no other text. Format:\n{\"account\": \"IKE or Transakcje\", \"balance\": number, \"cash\": number, \"positions\": [{\"name\": \"Name\", \"ticker\": \"YAHOO_TICKER\", \"volume\": number, \"open_price\": number, \"currency\": \"USD or EUR\"}]}\nYahoo tickers: NIO.US->NIO, UPST->UPST, SOFI->SOFI, NKE.US->NKE, VGWL.DE->VGWL.DE, IB1T.DE->IB1T.DE, XAD6.DE->XAD6.DE\n\nAnalysis:\n" + vision_text
+        r = vc.chat.completions.create(model="llama-3.3-70b-versatile", messages=[{"role":"user","content":prompt}], max_tokens=800)
+        raw = r.choices[0].message.content.strip().replace("```json","").replace("```","").strip()
+        data = json.loads(raw)
+        portfolio = load_portfolio()
+        account = data.get("account","")
+        if account in ["IKE","Transakcje"]:
+            if data.get("balance"): portfolio["accounts"][account]["balance"] = data["balance"]
+            if data.get("cash") is not None: portfolio["accounts"][account]["cash"] = data["cash"]
+            if data.get("positions"):
+                new_tickers = {p["ticker"] for p in data["positions"]}
+                portfolio["positions"] = [p for p in portfolio["positions"] if p["account"] != account or p["ticker"] in new_tickers]
+                for np in data["positions"]:
+                    found = False
+                    for p in portfolio["positions"]:
+                        if p["ticker"] == np["ticker"] and p["account"] == account:
+                            p["volume"] = np["volume"]
+                            p["open_price"] = np["open_price"]
+                            found = True
+                            break
+                    if not found:
+                        portfolio["positions"].append({"name": np.get("name",np["ticker"]), "ticker": np["ticker"], "volume": np["volume"], "open_price": np["open_price"], "account": account, "currency": np.get("currency","EUR"), "cost_pln": 0, "stop_loss": None, "take_profit": None})
+            portfolio["updated"] = datetime.now().strftime("%d.%m.%Y %H:%M")
+            save_portfolio(portfolio)
+            return "done:" + account
+        return "no account"
+    except Exception as e:
+        return "err:" + str(e)[:100]
+
 def get_system_prompt():
     system = open("system_prompt.txt", "r", encoding="utf-8").read()
     now = datetime.now().strftime("%A, %d %B %Y, %H:%M")
@@ -107,7 +140,7 @@ def card(name, price, open_price, volume, eur_pln=4.22, cost_pln=None, currency=
     <div style='background:#f8f9fa;padding:14px;border-radius:10px;border-left:4px solid {color};margin-bottom:8px;'>
         <div style='color:#555;font-size:12px;margin-bottom:4px;'>{name}</div>
         <div style='color:#222;font-size:18px;font-weight:bold;'>{price:.2f} <span style='font-size:12px;color:#999;'>{currency}</span></div>
-        <div style='color:{color};font-size:13px;'>{arrow} {pct:+.2f}% &nbsp; P&L: {pl:+.2f} PLN</div>
+        <div style='color:{color};font-size:13px;'>{arrow} {pct:+.2f}%</div><div style='color:{"#00c853" if pl >= 0 else "#ff1744"};font-size:13px;'>P&L: {pl:+.2f} PLN</div>
         {sl_html}
     </div>
     """
@@ -272,6 +305,7 @@ with col1:
             vr = vc.chat.completions.create(model="meta-llama/llama-4-scout-17b-16e-instruct", messages=[{"role": "user", "content": ic}], max_tokens=1500)
             vision_text = vr.choices[0].message.content
             st.session_state.screenshot_analysis = vision_text
+            ares = auto_update_from_vision(vision_text)
             st.session_state.messages.append({"role": "user", "content": "Анализ скриншота", "time": now_str()})
             st.session_state.messages.append({"role": "assistant", "content": vision_text, "time": now_str()})
             save_history(st.session_state.messages)
