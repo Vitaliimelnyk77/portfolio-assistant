@@ -224,7 +224,7 @@ if portfolio:
         tickers = {p["name"]: p["ticker"] for p in all_positions}
         selected = st.selectbox("Выберите актив", list(tickers.keys()))
         period = st.radio("Период", ["1mo", "3mo", "6mo", "1y"], horizontal=True)
-        hist = get_history_chart(tickers[selected], period)
+        hist = get_history_chart(tickers[selected], period) if selected else None
         if hist is not None and not hist.empty:
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=hist.index, y=hist["Close"], mode="lines", name=selected, line=dict(color="#1976d2", width=2), fill="tozeroy", fillcolor="rgba(25,118,210,0.1)"))
@@ -316,7 +316,7 @@ with col1:
     if st.button("🔍 Запустить скрининг", use_container_width=True, type="primary"):
         with st.spinner("Сканирую рынок..."):
             import subprocess
-            result = subprocess.run(["/root/portfolio-assistant/venv/bin/python3", "screener.py"], capture_output=True, text=True, cwd="/root/portfolio-assistant")
+            result = subprocess.run(["/root/portfolio-assistant/venv/bin/python3", "screener_v2.py"], capture_output=True, text=True, cwd="/root/portfolio-assistant")
             if result.returncode == 0:
                 st.success("Скрининг завершён! Результаты в Telegram и в чате.")
                 try:
