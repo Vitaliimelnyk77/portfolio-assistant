@@ -1,13 +1,13 @@
 {
-  "updated": "11.03.2026 13:10",
+  "updated": "09.04.2026 09:13",
   "accounts": {
     "IKE": {
-      "balance": 5520.84,
-      "cash": 98.74
+      "balance": 6191.25,
+      "cash": 64.75
     },
     "Transakcje": {
-      "balance": 780.0,
-      "cash": 38.13
+      "balance": 1014.03,
+      "cash": 40.15
     }
   },
   "positions": [
@@ -39,38 +39,38 @@
       "currency": "EUR"
     },
     {
-      "name": "Upstart",
-      "ticker": "UPST",
-      "volume": 3.1272,
-      "open_price": 26.02,
+      "name": "Nike",
+      "ticker": "NKE",
+      "volume": 1.0913,
+      "open_price": 49.33,
       "account": "Transakcje",
       "currency": "USD",
-      "cost_pln": 291.94,
-      "stop_loss": 24.5,
-      "take_profit": 31.0
+      "cost_pln": 170.83,
+      "stop_loss": null,
+      "take_profit": null
     },
     {
       "name": "SoFi",
       "ticker": "SOFI",
-      "volume": 4.8183,
-      "open_price": 17.19,
+      "volume": 6.5158,
+      "open_price": 16.81,
       "account": "Transakcje",
       "currency": "USD",
-      "cost_pln": 297.17,
-      "stop_loss": 16.5,
-      "take_profit": 20.0
+      "cost_pln": 389.96,
+      "stop_loss": null,
+      "take_profit": null
     },
     {
-      "name": "Nike",
-      "ticker": "NKE",
-      "volume": 0.4828,
-      "open_price": 55.84,
+      "name": "Upstart",
+      "ticker": "UPST",
+      "volume": 4.1661,
+      "open_price": 25.89,
       "account": "Transakcje",
       "currency": "USD",
-      "cost_pln": 100.0,
-      "stop_loss": 51.0,
-      "take_profit": 65.0
+      "cost_pln": 413.09,
+      "stop_loss": null,
+      "take_profit": null
     }
   ],
-  "initial_capital": 6700.0
+  "initial_capital": 7205.29
 }
