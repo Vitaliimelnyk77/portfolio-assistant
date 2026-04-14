@@ -6,7 +6,7 @@ from datetime import datetime
 from groq import Groq
 import os
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv("/root/portfolio-assistant/.env")
 import google.generativeai as genai
 from xtb_parser import parse_xtb_file
 import yfinance as yf
@@ -118,7 +118,7 @@ def save_portfolio(portfolio):
         json.dump(portfolio, f, ensure_ascii=False, indent=2)
 
 def card(name, price, open_price, volume, eur_pln=4.22, cost_pln=None, currency="EUR", usd_pln=3.57, stop_loss=None, take_profit=None):
-    pct = (price - open_price) / open_price * 100
+    pct = (price - open_price) / open_price * 100 if open_price > 0 else 0
     rate = usd_pln if currency == "USD" else eur_pln
     if cost_pln:
         pl = price * volume * rate - cost_pln

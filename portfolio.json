@@ -1,12 +1,12 @@
 {
-  "updated": "09.04.2026 09:13",
+  "updated": "14.04.2026 10:36",
   "accounts": {
     "IKE": {
-      "balance": 6191.25,
+      "balance": 6233.04,
       "cash": 64.75
     },
     "Transakcje": {
-      "balance": 1014.03,
+      "balance": 997.80,
       "cash": 40.15
     }
   },
@@ -14,28 +14,28 @@
     {
       "name": "VGWL.DE",
       "ticker": "VGWL.DE",
-      "volume": 6.3387,
-      "open_price": 146.0878,
+      "volume": 7.2549,
+      "open_price": 144.72,
       "account": "IKE",
-      "cost_pln": 3946.14,
+      "cost_pln": 4476.45,
       "currency": "EUR"
     },
     {
       "name": "Bitcoin ETN",
       "ticker": "IB1T.DE",
-      "volume": 41.6954,
-      "open_price": 5.619,
+      "volume": 45.7116,
+      "open_price": 5.633,
       "account": "IKE",
-      "cost_pln": 997.965,
+      "cost_pln": 1093.0,
       "currency": "EUR"
     },
     {
       "name": "Silver ETC",
       "ticker": "XAD6.DE",
-      "volume": 0.1698,
-      "open_price": 690.3,
+      "volume": 0.2079,
+      "open_price": 669.57,
       "account": "IKE",
-      "cost_pln": 499.294,
+      "cost_pln": 591.62,
       "currency": "EUR"
     },
     {
@@ -45,7 +45,7 @@
       "open_price": 49.33,
       "account": "Transakcje",
       "currency": "USD",
-      "cost_pln": 170.83,
+      "cost_pln": 199.99,
       "stop_loss": null,
       "take_profit": null
     },
@@ -56,7 +56,7 @@
       "open_price": 16.81,
       "account": "Transakcje",
       "currency": "USD",
-      "cost_pln": 389.96,
+      "cost_pln": 400.94,
       "stop_loss": null,
       "take_profit": null
     },
@@ -67,10 +67,10 @@
       "open_price": 25.89,
       "account": "Transakcje",
       "currency": "USD",
-      "cost_pln": 413.09,
+      "cost_pln": 395.06,
       "stop_loss": null,
       "take_profit": null
     }
   ],
-  "initial_capital": 7205.29
+  "initial_capital": 7700.0
 }
