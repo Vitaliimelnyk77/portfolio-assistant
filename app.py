@@ -87,14 +87,36 @@ def get_system_prompt():
     return system
 
 def get_rates():
+    import requests as req
     try:
-        eur_pln = yf.Ticker("EURPLN=X").fast_info.last_price
-        usd_pln = yf.Ticker("USDPLN=X").fast_info.last_price
-        return eur_pln, usd_pln
+        h = {"User-Agent": "Mozilla/5.0"}
+        r1 = req.get("https://query1.finance.yahoo.com/v8/finance/chart/EURPLN=X?interval=1d&range=1d", headers=h, timeout=5)
+        eur = r1.json()["chart"]["result"][0]["meta"]["regularMarketPrice"]
+        r2 = req.get("https://query1.finance.yahoo.com/v8/finance/chart/USDPLN=X?interval=1d&range=1d", headers=h, timeout=5)
+        usd = r2.json()["chart"]["result"][0]["meta"]["regularMarketPrice"]
+        return eur, usd
     except:
         return 4.22, 3.57
 
 def get_price(ticker):
+    import finnhub, requests as req
+    # US тикеры через Finnhub
+    if "." not in ticker and "=" not in ticker:
+        try:
+            fc = finnhub.Client(api_key=os.getenv("FINNHUB_API_KEY", "d7fpfj1r01qqb8rh4ocgd7fpfj1r01qqb8rh4od0"))
+            q = fc.quote(ticker)
+            if q and q.get("c", 0) > 0:
+                return q["c"]
+        except:
+            pass
+    # Европейские ETF и валюты через Yahoo API
+    try:
+        r = req.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d", headers={"User-Agent": "Mozilla/5.0"}, timeout=5)
+        data = r.json()
+        return data["chart"]["result"][0]["meta"]["regularMarketPrice"]
+    except:
+        pass
+    # Fallback yfinance
     try:
         return yf.Ticker(ticker).fast_info.last_price
     except:
