@@ -88,39 +88,69 @@ def get_system_prompt():
 
 def get_rates():
     import requests as req
+    td_key = os.getenv("TWELVEDATA_API_KEY", "93825a6528b84e4aa2896b0d879f04fe")
     try:
-        h = {"User-Agent": "Mozilla/5.0"}
-        r1 = req.get("https://query1.finance.yahoo.com/v8/finance/chart/EURPLN=X?interval=1d&range=1d", headers=h, timeout=5)
-        eur = r1.json()["chart"]["result"][0]["meta"]["regularMarketPrice"]
-        r2 = req.get("https://query1.finance.yahoo.com/v8/finance/chart/USDPLN=X?interval=1d&range=1d", headers=h, timeout=5)
-        usd = r2.json()["chart"]["result"][0]["meta"]["regularMarketPrice"]
+        r1 = req.get(f"https://api.twelvedata.com/quote?symbol=EUR/PLN&apikey={td_key}", timeout=8)
+        eur = float(r1.json()["close"])
+        r2 = req.get(f"https://api.twelvedata.com/quote?symbol=USD/PLN&apikey={td_key}", timeout=8)
+        usd = float(r2.json()["close"])
         return eur, usd
     except:
-        return 4.22, 3.57
+        return 4.23, 3.59
 
+_price_cache = {}
+def _load_av_cache():
+    try:
+        import json
+        with open("/root/portfolio-assistant/av_cache.json") as f:
+            return json.load(f)
+    except:
+        return {}
+def _save_av_cache(cache):
+    import json
+    with open("/root/portfolio-assistant/av_cache.json","w") as f:
+        json.dump(cache, f)
+_av_cache = _load_av_cache()
 def get_price(ticker):
     import finnhub, requests as req
+    global _price_cache
     # US тикеры через Finnhub
     if "." not in ticker and "=" not in ticker:
         try:
             fc = finnhub.Client(api_key=os.getenv("FINNHUB_API_KEY", "d7fpfj1r01qqb8rh4ocgd7fpfj1r01qqb8rh4od0"))
             q = fc.quote(ticker)
             if q and q.get("c", 0) > 0:
+                _price_cache[ticker] = q["c"]
                 return q["c"]
         except:
             pass
-    # Европейские ETF и валюты через Yahoo API
-    try:
-        r = req.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d", headers={"User-Agent": "Mozilla/5.0"}, timeout=5)
-        data = r.json()
-        return data["chart"]["result"][0]["meta"]["regularMarketPrice"]
-    except:
-        pass
-    # Fallback yfinance
-    try:
-        return yf.Ticker(ticker).fast_info.last_price
-    except:
-        return None
+    # Европейские ETF через Alpha Vantage (с кешем)
+    av_key = os.getenv("ALPHAVANTAGE_API_KEY", "03PEDZT8ABCIOSU5")
+    av_map = {"VGWL.DE": "VGWL.DEX", "IB1T.DE": "IB1T.DEX", "XAD6.DE": "XAD6.FRK"}
+    if ticker in av_map:
+        import time
+        cache_key = av_map[ticker]
+        cached = _av_cache.get(cache_key, {})
+        if cached and time.time() - cached.get("ts", 0) < 3600:
+            _price_cache[ticker] = cached["price"]
+            return cached["price"]
+        try:
+            r = req.get(f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={cache_key}&apikey={av_key}", timeout=10)
+            data = r.json().get("Global Quote", {})
+            p = float(data.get("05. price", 0))
+            if p > 0:
+                _price_cache[ticker] = p
+                _av_cache[cache_key] = {"price": p, "ts": time.time()}
+                _save_av_cache(_av_cache)
+                return p
+        except:
+            pass
+        if cached:
+            return cached.get("price")
+    # Кеш
+    if ticker in _price_cache:
+        return _price_cache[ticker]
+    return None
 
 def get_history_chart(ticker, period="1mo"):
     try:
