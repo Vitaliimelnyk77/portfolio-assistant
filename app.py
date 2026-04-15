@@ -368,7 +368,7 @@ with col1:
     if st.button("🔍 Запустить скрининг", use_container_width=True, type="primary"):
         with st.spinner("Сканирую рынок..."):
             import subprocess
-            result = subprocess.run(["/root/portfolio-assistant/venv/bin/python3", "screener_v2.py"], capture_output=True, text=True, cwd="/root/portfolio-assistant")
+            result = subprocess.run(["/root/portfolio-assistant/venv/bin/python3", "screener_v3.py"], capture_output=True, text=True, cwd="/root/portfolio-assistant")
             if result.returncode == 0:
                 st.success("Скрининг завершён! Результаты в Telegram и в чате.")
                 try:
