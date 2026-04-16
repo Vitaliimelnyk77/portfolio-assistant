@@ -70,7 +70,18 @@ EXTRA = [
 
 def get_indicators(ticker):
     try:
-        h = yf.Ticker(ticker).history(period="3mo", interval="1d")
+        import requests as req
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=3mo"
+        r = req.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+        data = r.json()["chart"]["result"][0]
+        ts = data["indicators"]["quote"][0]
+        closes = [c for c in ts["close"] if c is not None]
+        volumes = [v for v in ts["volume"] if v is not None]
+        if len(closes) < 20:
+            return None
+        import pandas as pd
+        h = pd.DataFrame({"Close": closes, "Volume": volumes[:len(closes)]})
+        h = h.dropna()
         if len(h) < 20:
             return None
         h["MA20"] = h["Close"].rolling(20).mean()

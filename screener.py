@@ -19,7 +19,7 @@ UNIVERSE = [
     # Технологии
     "AAPL", "MSFT", "GOOGL", "META", "NVDA", "AMD", "INTC", "CRM", "ADBE", "ORCL",
     # Финансы
-    "JPM", "BAC", "GS", "MS", "V", "MA", "PYPL", "SQ",
+    "JPM", "BAC", "GS", "MS", "V", "MA", "PYPL", "XYZ",
     # Здравоохранение
     "JNJ", "PFE", "MRK", "ABBV", "UNH",
     # Потребительские
