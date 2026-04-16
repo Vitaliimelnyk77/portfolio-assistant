@@ -237,7 +237,7 @@ if portfolio:
     <div style='background:linear-gradient(135deg,#42a5f5,#1e88e5);padding:20px;border-radius:14px;margin-bottom:16px;'>
         <div style='color:rgba(255,255,255,0.7);font-size:26px;'>Общий баланс портфеля</div>
         <div style='color:{"#00c853" if total >= portfolio.get("initial_capital", 0) else "#ff1744"};font-size:38px;font-weight:bold;margin:4px 0;'>{total:,.2f} PLN</div>
-        <div style='color:{"#00c853" if total >= portfolio.get("initial_capital", 0) else "#ff1744"};font-size:48px;margin-top:6px;'>{"▲" if total >= portfolio.get("initial_capital", 0) else "▼"} P&L: {total - portfolio.get("initial_capital", 0):+,.2f} PLN ({(total - portfolio.get("initial_capital", 0)) / portfolio.get("initial_capital", 1) * 100:+.2f}%)</div>
+        <div style='color:{"#00c853" if total >= portfolio.get("initial_capital", 0) else "#ff1744"};font-size:28px;margin-top:4px;'>{"▲" if total >= portfolio.get("initial_capital", 0) else "▼"} P&L: {total - portfolio.get("initial_capital", 0):+,.2f} PLN ({(total - portfolio.get("initial_capital", 0)) / portfolio.get("initial_capital", 1) * 100:+.2f}%)</div>
         <div style='display:flex;gap:24px;margin-top:8px;'>
             <div><span style='color:rgba(255,255,255,0.7);font-size:24px;'>IKE</span><br><span style='color:white;font-size:32px;'>{ike_bal:,.2f} PLN</span></div>
             <div><span style='color:rgba(255,255,255,0.7);font-size:24px;'>Transakcje</span><br><span style='color:white;font-size:32px;'>{tr_bal:,.2f} PLN</span></div>
@@ -247,6 +247,35 @@ if portfolio:
         <div style='color:rgba(255,255,255,0.5);font-size:20px;margin-top:16px;'>Обновлено: {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}</div>
     </div>
     """, unsafe_allow_html=True)
+
+
+    # Сохраняем текущий баланс в историю
+    try:
+        bh = json.load(open("balance_history.json"))
+        today = datetime.now().strftime("%Y-%m-%d")
+        if today not in bh["dates"]:
+            bh["dates"].append(today)
+            bh["totals"].append(round(total, 2))
+            bh["invested"].append(portfolio.get("initial_capital", 7700))
+            json.dump(bh, open("balance_history.json", "w"), indent=2)
+        elif bh["totals"][-1] != round(total, 2) and bh["dates"][-1] == today:
+            bh["totals"][-1] = round(total, 2)
+            json.dump(bh, open("balance_history.json", "w"), indent=2)
+    except:
+        pass
+
+    # График истории портфеля
+    try:
+        bh = json.load(open("balance_history.json"))
+        import plotly.graph_objects as go
+        fig_hist = go.Figure()
+        fig_hist.add_trace(go.Scatter(x=bh["dates"], y=bh["totals"], mode="lines+markers", name="Портфель", line=dict(color="#1976d2", width=3), fill="tozeroy", fillcolor="rgba(25,118,210,0.1)"))
+        fig_hist.add_trace(go.Scatter(x=bh["dates"], y=bh["invested"], mode="lines", name="Вложено", line=dict(color="#ff9800", width=2, dash="dash")))
+        fig_hist.update_layout(height=250, margin=dict(l=0,r=0,t=30,b=0), title="История портфеля", template="plotly_white", legend=dict(orientation="h", y=1.1))
+        st.plotly_chart(fig_hist, use_container_width=True)
+    except:
+        pass
+
     col_ike, col_tr = st.columns(2)
     ike_positions = [p for p in portfolio["positions"] if p["account"] == "IKE" and p["volume"] > 0]
     tr_positions = [p for p in portfolio["positions"] if p["account"] == "Transakcje" and p["volume"] > 0]
@@ -394,6 +423,119 @@ with col1:
         save_history([])
 
 with col2:
+
+    st.markdown("---")
+    col_sh, col_sb = st.columns([3, 1])
+    with col_sh:
+        st.subheader("🔍 Скрининг рынка")
+    with col_sb:
+        if st.button("🔄 Обновить", use_container_width=True, key="run_screener"):
+            import subprocess
+            with st.spinner("Запускаю скрининг (~8 мин)..."):
+                subprocess.Popen(["/root/portfolio-assistant/venv/bin/python3", "/root/portfolio-assistant/screener_v3.py"])
+                st.info("Скрининг запущен в фоне. Обнови страницу через 8 минут.")
+    try:
+        sr = json.load(open("screener_results.json"))
+        st.caption(f"Последнее обновление: {sr.get('date','?')} | Проверено {sr.get('total','?')} активов | Найдено {sr.get('count','?')} сигналов")
+        results = sr.get("results", [])
+        if results:
+            for r in results[:10]:
+                score = r.get("score", 0)
+                stars = "⭐" * min(score, 5)
+                price = r.get("price", 0)
+                rsi = r.get("rsi", 0)
+                ch1d = r.get("change_1d", 0)
+                ch1w = r.get("change_1w", 0)
+                reasons = ", ".join(r.get("reasons", []))
+                color = "#00c853" if score >= 5 else ("#ffa726" if score >= 4 else "#64b5f6")
+                st.markdown(f"""<div style='border-left:4px solid {color};padding:8px 12px;margin:6px 0;background:#f5f5f5;border-radius:4px;'>
+                <div style='display:flex;justify-content:space-between;'>
+                <b>{stars} {r.get("ticker","?")}</b>
+                <span>${price:.2f} | RSI={rsi:.0f} | 1д:{ch1d:+.1f}% | 1нед:{ch1w:+.1f}%</span>
+                </div>
+                <div style='font-size:12px;color:#666;margin-top:4px;'>{reasons}</div>
+                </div>""", unsafe_allow_html=True)
+        else:
+            st.info("Сильных сигналов пока не найдено. Запусти скрининг или подожди до 16:00.")
+    except FileNotFoundError:
+        st.info("Скрининг ещё не запускался. Нажми '🔄 Обновить' чтобы запустить (~8 минут).")
+    except Exception as e:
+        st.error(f"Ошибка загрузки: {e}")
+
+    st.markdown("---")
+    st.subheader("📓 Журнал сделок")
+    try:
+        tj = json.load(open("trades_journal.json"))
+        trades = tj["trades"]
+        closed = [t for t in trades if t.get("status") == "CLOSED"]
+        open_trades = [t for t in trades if t.get("status") == "OPEN"]
+        
+        col_s1, col_s2, col_s3, col_s4 = st.columns(4)
+        col_s1.metric("Открытых", len(open_trades))
+        col_s2.metric("Закрытых", len(closed))
+        total_pnl = sum(t.get("pnl_pln", 0) for t in closed)
+        wins = len([t for t in closed if t.get("pnl_pln", 0) > 0])
+        losses = len([t for t in closed if t.get("pnl_pln", 0) < 0])
+        col_s3.metric("P&L закрытых", f"{total_pnl:+.2f} PLN")
+        winrate = (wins / len(closed) * 100) if closed else 0
+        col_s4.metric("Win Rate", f"{winrate:.0f}%", f"{wins}W / {losses}L")
+
+        if closed:
+            from collections import defaultdict
+            by_ticker = defaultdict(lambda: {"pnl": 0, "count": 0})
+            for t in closed:
+                by_ticker[t["ticker"]]["pnl"] += t.get("pnl_pln", 0)
+                by_ticker[t["ticker"]]["count"] += 1
+            sorted_tickers = sorted(by_ticker.items(), key=lambda x: -x[1]["pnl"])
+            winners = [(k, v) for k, v in sorted_tickers if v["pnl"] > 0][:3]
+            losers = [(k, v) for k, v in sorted_tickers[::-1] if v["pnl"] < 0][:3]
+
+            col_w, col_l = st.columns(2)
+            with col_w:
+                st.markdown("#### 🏆 Топ прибыль")
+                medals = ["🥇","🥈","🥉"]
+                for i, (tk, v) in enumerate(winners):
+                    medal = medals[i] if i < 3 else "•"
+                    st.success(f"{medal} **{tk}** — +{v['pnl']:.2f} PLN")
+            with col_l:
+                st.markdown("#### 🔴 Топ убытки")
+                for i, (tk, v) in enumerate(losers):
+                    st.error(f"{i+1}. **{tk}** — {v['pnl']:.2f} PLN")
+
+        tab1, tab2 = st.tabs(["🟢 Закрытые", "🔵 Открытые"])
+        with tab1:
+            if closed:
+                for t in sorted(closed, key=lambda x: x.get("close_date", x["date"]), reverse=True):
+                    pnl = t.get("pnl_pln", 0)
+                    pnl_pct = t.get("pnl_pct", 0)
+                    color = "#00c853" if pnl > 0 else "#ff1744"
+                    emoji = "🟢" if pnl > 0 else "🔴"
+                    notes = t.get("notes", "")
+                    st.markdown(f"""<div style='border-left:4px solid {color};padding:8px 12px;margin:6px 0;background:#f5f5f5;border-radius:4px;'>
+                    <div style='display:flex;justify-content:space-between;'>
+                    <b>{emoji} {t["ticker"]}</b> <span style='color:{color};font-weight:bold;'>{pnl:+.2f} PLN ({pnl_pct:+.1f}%)</span>
+                    </div>
+                    <div style='font-size:13px;color:#aaa;'>{t["date"]} → {t.get("close_date","?")} | {t["volume"]} @ {t["price"]} → {t.get("close_price","?")} {t.get("currency","")}</div>
+                    {f'<div style="font-size:12px;color:#888;font-style:italic;">{notes}</div>' if notes else ''}
+                    </div>""", unsafe_allow_html=True)
+            else:
+                st.info("Нет закрытых сделок")
+        with tab2:
+            if open_trades:
+                for t in sorted(open_trades, key=lambda x: x["date"], reverse=True):
+                    notes = t.get("notes", "")
+                    st.markdown(f"""<div style='border-left:4px solid #2196f3;padding:8px 12px;margin:6px 0;background:#f5f5f5;border-radius:4px;'>
+                    <div style='display:flex;justify-content:space-between;'>
+                    <b>🔵 {t["ticker"]}</b> <span style='color:#888;'>{t["account"]}</span>
+                    </div>
+                    <div style='font-size:13px;color:#aaa;'>{t["date"]} | {t["volume"]} @ {t["price"]} {t.get("currency","")}</div>
+                    {f'<div style="font-size:12px;color:#888;font-style:italic;">{notes}</div>' if notes else ''}
+                    </div>""", unsafe_allow_html=True)
+            else:
+                st.info("Нет открытых сделок")
+    except Exception as e:
+        st.error(f"Ошибка загрузки журнала: {e}")
+
     st.markdown("### 💬 Чат с помощником")
     prompt = None
     for key in ["pending_command", "quick_command"]:

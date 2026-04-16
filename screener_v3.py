@@ -22,19 +22,11 @@ def send(msg):
     except:
         pass
 
-# Топ US акции для скрининга
-UNIVERSE = [
-    "AAPL","MSFT","GOOGL","META","NVDA","AMD","INTC","CRM","ADBE","ORCL",
-    "JPM","BAC","GS","MS","V","MA","PYPL",
-    "JNJ","PFE","MRK","ABBV","UNH",
-    "AMZN","TSLA","NKE","MCD","SBUX","KO","PG",
-    "XOM","CVX",
-    "SOFI","AFRM","UPST","COIN","HOOD","PLTR","RIVN",
-    "NFLX","DIS","CMCSA","T","VZ",
-    "BA","CAT","DE","GE","HON",
-    "WMT","TGT","COST","HD","LOW",
-    "BTC-USD","ETH-USD","SOL-USD",
-]
+# Universe загружается из universe.json
+try:
+    UNIVERSE = json.load(open("/root/portfolio-assistant/universe.json"))
+except:
+    UNIVERSE = ["AAPL","MSFT","GOOGL","META","NVDA","AMD","TSLA"]
 
 import finnhub
 fh = finnhub.Client(api_key=FH_KEY)
