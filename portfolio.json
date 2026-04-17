@@ -68,8 +68,8 @@
       "account": "Transakcje",
       "currency": "USD",
       "cost_pln": 400.47,
-      "stop_loss": null,
-      "take_profit": null
+      "stop_loss": 38.0,
+      "take_profit": 50.0
     }
   ],
   "initial_capital": 7700.0
