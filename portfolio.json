@@ -1,13 +1,13 @@
 {
-  "updated": "15.04.2026 22:31",
+  "updated": "17.04.2026 18:09",
   "accounts": {
     "IKE": {
       "balance": 6233.04,
       "cash": 64.75
     },
     "Transakcje": {
-      "balance": 1061.13,
-      "cash": 18.15
+      "balance": 1137.28,
+      "cash": 79.52
     }
   },
   "positions": [
@@ -50,17 +50,6 @@
       "take_profit": null
     },
     {
-      "name": "SoFi",
-      "ticker": "SOFI",
-      "volume": 6.5158,
-      "open_price": 16.81,
-      "account": "Transakcje",
-      "currency": "USD",
-      "cost_pln": 400.94,
-      "stop_loss": null,
-      "take_profit": null
-    },
-    {
       "name": "Verizon",
       "ticker": "VZ",
       "volume": 3.0744,
@@ -68,6 +57,17 @@
       "account": "Transakcje",
       "currency": "USD",
       "cost_pln": 499.88,
+      "stop_loss": null,
+      "take_profit": null
+    },
+    {
+      "name": "Devon Energy",
+      "ticker": "DVN",
+      "volume": 2.6285,
+      "open_price": 42.38,
+      "account": "Transakcje",
+      "currency": "USD",
+      "cost_pln": 400.47,
       "stop_loss": null,
       "take_profit": null
     }

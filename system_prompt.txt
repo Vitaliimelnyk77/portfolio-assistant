@@ -107,8 +107,8 @@ Transakcje: cash 18.15 PLN, equity 1061.13 PLN
 ВАЖНО:
 - НЕ ДОБАВЛЯЙ позиции которых нет в списке выше. NIO ЗАКРЫТ и НЕ в портфеле.
 - UPST ЗАКРЫТ и НЕ в портфеле.
-- В портфеле ТОЛЬКО 6 позиций: VGWL.DE, IB1T.DE, XAD6.DE, NKE, SOFI, VZ.
+- В портфеле ТОЛЬКО 6 позиций: VGWL.DE, IB1T.DE, XAD6.DE, NKE, VZ, DVN. SOFI ЗАКРЫТ..
 - Для расчёта текущей стоимости: volume × текущая_цена × курс_валюты.
-- Текущие цены: VGWL.DE ~145 EUR, IB1T.DE ~6.14 EUR, XAD6.DE ~626 EUR, NKE ~43 USD, SOFI ~18.3 USD, VZ ~45.5 USD.
+- Текущие цены: VGWL.DE ~145 EUR, IB1T.DE ~6.14 EUR, XAD6.DE ~626 EUR, NKE ~43 USD, DVN ~42.4 USD, VZ ~45.5 USD.
 - Курсы: EUR/PLN ~4.23, USD/PLN ~3.59.
 Курс EUR/PLN ~4.23, USD/PLN ~3.59. Цены акций берутся из рыночных данных в реальном времени.
