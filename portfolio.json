@@ -57,8 +57,8 @@
       "account": "Transakcje",
       "currency": "USD",
       "cost_pln": 499.88,
-      "stop_loss": null,
-      "take_profit": null
+      "stop_loss": 41.5,
+      "take_profit": 50.0
     },
     {
       "name": "Devon Energy",
