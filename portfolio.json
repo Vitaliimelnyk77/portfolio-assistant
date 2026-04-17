@@ -46,8 +46,8 @@
       "account": "Transakcje",
       "currency": "USD",
       "cost_pln": 199.99,
-      "stop_loss": null,
-      "take_profit": null
+      "stop_loss": 40.0,
+      "take_profit": 52.0
     },
     {
       "name": "Verizon",
