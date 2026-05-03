@@ -1,13 +1,13 @@
 {
-  "updated": "17.04.2026 18:09",
+  "updated": "03.05.2026 08:06",
   "accounts": {
     "IKE": {
-      "balance": 6233.04,
-      "cash": 64.75
+      "balance": 6700.0,
+      "cash": 0.0
     },
     "Transakcje": {
-      "balance": 1137.28,
-      "cash": 79.52
+      "balance": 1600.17,
+      "cash": 0.0
     }
   },
   "positions": [
@@ -61,15 +61,15 @@
       "take_profit": 50.0
     },
     {
-      "name": "Devon Energy",
-      "ticker": "DVN",
-      "volume": 2.6285,
-      "open_price": 42.38,
+      "name": "Berkshire Hathaway",
+      "ticker": "ZBH",
+      "volume": 1.6999,
+      "open_price": 80.29,
       "account": "Transakcje",
       "currency": "USD",
-      "cost_pln": 400.47,
-      "stop_loss": 38.0,
-      "take_profit": 50.0
+      "cost_pln": 499.85,
+      "stop_loss": null,
+      "take_profit": null
     }
   ],
   "initial_capital": 7700.0
