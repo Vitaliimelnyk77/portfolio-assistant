@@ -3,11 +3,11 @@
   "accounts": {
     "IKE": {
       "balance": 6426.55,
-      "cash": 0.0
+      "cash": 64.75
     },
     "Transakcje": {
       "balance": 1274.68,
-      "cash": 0.0
+      "cash": 59.25
     }
   },
   "positions": [
@@ -68,8 +68,8 @@
       "account": "Transakcje",
       "currency": "USD",
       "cost_pln": 499.85,
-      "stop_loss": null,
-      "take_profit": null
+      "stop_loss": 72.0,
+      "take_profit": 95.0
     }
   ],
   "initial_capital": 7700.0
