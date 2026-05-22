@@ -1,13 +1,13 @@
 {
-  "updated": "03.05.2026 17:13",
+  "updated": "22.05.2026 20:51",
   "accounts": {
     "IKE": {
-      "balance": 6426.55,
-      "cash": 64.75
+      "balance": 8701.66,
+      "cash": 0.0
     },
     "Transakcje": {
-      "balance": 1274.68,
-      "cash": 59.25
+      "balance": 1300.7,
+      "cash": 59.29
     }
   },
   "positions": [
